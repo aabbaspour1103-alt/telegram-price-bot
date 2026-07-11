@@ -2,14 +2,11 @@ import os
 import requests
 
 TOKEN = os.getenv("TOKEN")
-CHANNEL_ID = "-1003901224506"
 
-url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+print("TOKEN:", TOKEN)
 
-data = {
-    "chat_id": CHANNEL_ID,
-    "text": "✅ تست ارسال ربات انجام شد"
-}
+url = f"https://api.telegram.org/bot{TOKEN}/getMe"
 
-r = requests.post(url, data=data)
+r = requests.get(url)
+
 print(r.text)
