@@ -4,64 +4,36 @@ from datetime import datetime
 import pytz
 from persiantools.jdatetime import JalaliDateTime
 
-
 TOKEN = os.getenv("TOKEN")
 CHANNEL_ID = os.getenv("CHANNEL_ID")
 NAVASAN_API_KEY = os.getenv("NAVASAN_API_KEY")
 
 
-def get_prices():
-
+def get_price():
     url = f"https://api.navasan.tech/latest/?api_key={NAVASAN_API_KEY}"
-
-    data = requests.get(url).json()
-
-    return {
-        "usd": data["usd_sell"],
-        "eur": data["eur_sell"],
-        "gbp": data["gbp_sell"],
-        "cny": data["cny_sell"],
-        "aed": data["aed_sell"],
-        "sar": data["sar_sell"],
-        "gold18": data["18ayar"],
-        "gold24": data["24ayar"],
-        "ounce": data["ons"]
-    }
-
-
-def crypto_prices():
-
-    url = (
-        "https://api.coingecko.com/api/v3/simple/price"
-        "?ids=bitcoin,ethereum,solana,ripple,cardano,tron"
-        "&vs_currencies=usd"
-    )
-
-    data = requests.get(url).json()
+    response = requests.get(url)
+    data = response.json()
 
     return {
-        "btc": data["bitcoin"]["usd"],
-        "eth": data["ethereum"]["usd"],
-        "sol": data["solana"]["usd"],
-        "xrp": data["ripple"]["usd"],
-        "ada": data["cardano"]["usd"],
-        "trx": data["tron"]["usd"]
+        "usd": data.get("usd", {}).get("value", "-"),
+        "eur": data.get("eur", {}).get("value", "-"),
+        "gbp": data.get("gbp", {}).get("value", "-"),
+        "cny": data.get("cny", {}).get("value", "-"),
+        "aed": data.get("aed", {}).get("value", "-"),
+        "sar": data.get("sar", {}).get("value", "-"),
+        "gold": data.get("ounce", {}).get("value", "-"),
+        "18": data.get("18ayar", {}).get("value", "-"),
+        "24": data.get("24ayar", {}).get("value", "-"),
+        "btc": data.get("btc", {}).get("value", "-"),
+        "eth": data.get("eth", {}).get("value", "-"),
+        "sol": data.get("sol", {}).get("value", "-"),
+        "xrp": data.get("xrp", {}).get("value", "-"),
+        "ada": data.get("ada", {}).get("value", "-"),
+        "trx": data.get("trx", {}).get("value", "-")
     }
-
-
-def iran_time():
-
-    iran = pytz.timezone("Asia/Tehran")
-
-    now = datetime.now(iran)
-
-    jalali = JalaliDateTime(now)
-
-    return jalali.strftime("%Y/%m/%d  %H:%M")
 
 
 def send_message(text):
-
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 
     payload = {
@@ -72,60 +44,43 @@ def send_message(text):
     requests.post(url, data=payload)
 
 
-
 def main():
+    prices = get_price()
 
-    money = get_prices()
-    crypto = crypto_prices()
-
+    iran_time = datetime.now(pytz.timezone("Asia/Tehran"))
+    jalali_time = JalaliDateTime(iran_time).strftime("%Y/%m/%d - %H:%M")
 
     message = f"""
 💰 قیمت لحظه‌ای بازار
 
-💵 دلار آمریکا: {money['usd']} تومان
+💵 دلار آمریکا: {prices['usd']}
+💶 یورو اروپا: {prices['eur']}
+💷 پوند انگلیس: {prices['gbp']}
+🇨🇳 یوان چین: {prices['cny']}
+🇦🇪 درهم امارات: {prices['aed']}
+🇸🇦 ریال عربستان: {prices['sar']}
 
-💶 یورو اروپا: {money['eur']} تومان
+🥇 اونس جهانی طلا: {prices['gold']}
+🥇 طلای ۱۸ عیار: {prices['18']}
+🥇 طلای ۲۴ عیار: {prices['24']}
 
-💷 پوند انگلیس: {money['gbp']} تومان
-
-🇨🇳 یوان چین: {money['cny']} تومان
-
-🇦🇪 درهم امارات: {money['aed']} تومان
-
-🇸🇦 ریال عربستان: {money['sar']} تومان
-
-
-🥇 اونس جهانی طلا: {money['ounce']} دلار
-
-🥇 طلای ۱۸ عیار: {money['gold18']} تومان
-
-🥇 طلای ۲۴ عیار: {money['gold24']} تومان
-
-
-🔶 بیت‌کوین (BTC): ${crypto['btc']}
-
-🔷 اتریوم (ETH): ${crypto['eth']}
-
-🔸 سولانا (SOL): ${crypto['sol']}
-
-🔹 ریپل (XRP): ${crypto['xrp']}
-
-🔸 کاردانو (ADA): ${crypto['ada']}
-
-🔹 ترون (TRX): ${crypto['trx']}
-
+🔶 بیت‌کوین (BTC): {prices['btc']}
+🔷 اتریوم (ETH): {prices['eth']}
+🔸 سولانا (SOL): {prices['sol']}
+🔹 ریپل (XRP): {prices['xrp']}
+🔸 کاردانو (ADA): {prices['ada']}
+🔹 ترون (TRX): {prices['trx']}
 
 ⏰ زمان بروزرسانی:
-🇮🇷 {iran_time()}
+{jalali_time}
 
 ➖➖➖➖➖➖➖
 @CryptoBrew
 """
 
-
     send_message(message)
+    print("Message sent successfully")
 
 
-
-if name == "main":
+if __name__ == "__main__":
     main()
