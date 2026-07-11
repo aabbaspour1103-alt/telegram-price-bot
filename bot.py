@@ -30,6 +30,6 @@ def get_message():
 ⏰ بروزرسانی هر ۴ ساعت
 """
 
-while True:
-    send_message(get_message())
-    time.sleep(14400)
+print("Bot started")
+
+# بقیه کدها
