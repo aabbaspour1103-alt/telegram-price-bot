@@ -1,22 +1,43 @@
 import os
 import requests
+from datetime import datetime
 
 TOKEN = os.getenv("TOKEN")
-CHANNEL_ID = "@CryptoBrew"  # در صورت نیاز نام یا شناسه عددی کانال را قرار بده
+CHANNEL_ID = "@CryptoBrew"
 
-print("TOKEN:", TOKEN)
+API_KEY = "کلید_API_شما"
 
-if not TOKEN:
-    raise Exception("TOKEN is None. GitHub Secret تنظیم نشده است.")
+url = f"https://api.navasan.tech/latest/?api_key={API_KEY}"
+data = requests.get(url, timeout=20).json()
 
-url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+msg = f"""
+📊 قیمت لحظه‌ای بازار
 
-data = {
-    "chat_id": CHANNEL_ID,
-    "text": "✅ تست موفق! ربات با GitHub Actions اجرا شد."
-}
+💵 دلار آمریکا: {data['usd_sell']['value']} تومان
+💶 یورو: {data['eur']['value']} تومان
+💷 پوند انگلیس: {data['gbp']['value']} تومان
+💴 درهم امارات: {data['aed']['value']} تومان
+🇹🇷 لیر ترکیه: {data['try']['value']} تومان
+🇨🇦 دلار کانادا: {data['cad']['value']} تومان
 
-response = requests.post(url, data=data)
+💰 تتر: {data['usdt']['value']} تومان
+₿ بیت‌کوین: {data['btc']['value']} تومان
+⟠ اتریوم: {data['eth']['value']} تومان
 
-print("Status Code:", response.status_code)
-print(response.text)
+🥇 طلای ۱۸ عیار: {data['geram18']['value']} تومان
+🥇 طلای ۲۴ عیار: {data['geram24']['value']} تومان
+🌍 انس جهانی طلا: {data['ons']['value']} دلار
+
+🪙 سکه امامی: {data['sekeb']['value']} تومان
+🪙 نیم سکه: {data['nim']['value']} تومان
+🪙 ربع سکه: {data['rob']['value']} تومان
+🪙 سکه گرمی: {data['gerami']['value']} تومان
+
+🕒 بروزرسانی:
+{datetime.now().strftime('%Y-%m-%d %H:%M')}
+"""
+
+requests.post(
+    f"https://api.telegram.org/bot{TOKEN}/sendMessage",
+    data={"chat_id": CHANNEL_ID, "text": msg}
+)
