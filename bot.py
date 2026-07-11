@@ -1,8 +1,8 @@
 import os
 import requests
 
-TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-CHANNEL = "@YOUR_CHANNEL_ID"
+TOKEN = os.getenv("8670280483:AAHfvP4F49GyVh9iJGLhsyke5eju-cRRbmI")
+CHANNEL = "@CryptoBrew"
 
 message = """
 💰 قیمت لحظه‌ای بازار
