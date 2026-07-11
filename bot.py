@@ -37,4 +37,4 @@ while True:
     message = get_message()
     send_message(message)
     print("Message sent")
-    time.sleep(14400)
+    time.sleep(60)
