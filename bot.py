@@ -1,6 +1,5 @@
 import os
 import requests
-import time
 
 TOKEN = os.getenv("TOKEN")
 CHANNEL_ID = "@CryptoBrew"
@@ -11,7 +10,7 @@ def send_message(text):
         "chat_id": CHANNEL_ID,
         "text": text
     }
-    response = requests.post(url, data=data)
+    response = requests.post(url, data=data, timeout=10)
     print(response.text)
 
 def get_message():
@@ -33,8 +32,7 @@ def get_message():
 
 print("Bot started")
 
-while True:
-    message = get_message()
-    send_message(message)
-    print("Message sent")
-    time.sleep(60)
+message = get_message()
+send_message(message)
+
+print("Message sent successfully")
