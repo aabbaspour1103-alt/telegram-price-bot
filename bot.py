@@ -2,74 +2,98 @@ import os
 import requests
 from datetime import datetime
 
+
 TOKEN = os.getenv("TOKEN")
-CHANNEL_ID = os.getenv("CHANNEL_ID")
 NAVASAN_API_KEY = os.getenv("NAVASAN_API_KEY")
+CHANNEL_ID = "@CryptoBrew"
 
 
-def get_navasan_prices():
-    try:
-        url = f"https://api.navasan.tech/latest/?api_key={NAVASAN_API_KEY}"
-        response = requests.get(url, timeout=20)
-        return response.json()
-    except Exception as e:
-        print("Navasan Error:", e)
-        return {}
+def get_prices():
 
+    url = f"https://api.navasan.tech/api/"
 
-def get_price(data, keys):
-    for key in keys:
-        if key in data:
-            try:
-                return data[key]["value"]
-            except:
-                return data[key]
-    return "ناموجود"
-
-
-def send_message(text):
-    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-
-    payload = {
-        "chat_id": CHANNEL_ID,
-        "text": text
+    headers = {
+        "Api-Key": NAVASAN_API_KEY
     }
 
-    response = requests.post(url, data=payload, timeout=20)
-    print(response.text)
+    response = requests.get(url, headers=headers)
 
+    data = response.json()
 
-prices = get_navasan_prices()
+    try:
+        dollar = data["usd"]["value"]
+        euro = data["eur"]["value"]
+        pound = data["gbp"]["value"]
+        yuan = data["cny"]["value"]
+        aed = data["aed"]["value"]
+        sar = data["sar"]["value"]
 
+        gold = data["ons"]["value"]
+        gold18 = data["gold_18"]["value"]
+        gold24 = data["gold_24"]["value"]
 
-message = f"""
+        btc = data["btc"]["value"]
+        eth = data["eth"]["value"]
+        sol = data["sol"]["value"]
+        xrp = data["xrp"]["value"]
+        ada = data["ada"]["value"]
+        trx = data["trx"]["value"]
+
+    except Exception:
+        return "خطا در دریافت اطلاعات بازار"
+
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    message = f"""
 💰 قیمت لحظه‌ای بازار
 
-💵 دلار آمریکا: {get_price(prices, ['usd','dollar'])} تومان
-💶 یورو اروپا: {get_price(prices, ['eur','euro'])} تومان
-💷 پوند انگلیس: {get_price(prices, ['gbp','pound'])} تومان
-🇨🇳 یوان چین: {get_price(prices, ['cny','yuan'])} تومان
-🇦🇪 درهم امارات: {get_price(prices, ['aed','dirham'])} تومان
-🇸🇦 ریال عربستان: {get_price(prices, ['sar','riyal'])} تومان
+💵 دلار آمریکا: {dollar}
+💶 یورو اروپا: {euro}
+💷 پوند انگلیس: {pound}
+🇨🇳 یوان چین: {yuan}
+🇦🇪 درهم امارات: {aed}
+🇸🇦 ریال عربستان: {sar}
 
-🥇 اونس جهانی طلا: {get_price(prices, ['ons','gold'])} دلار
-🥇 طلای ۱۸ عیار: {get_price(prices, ['18ayar','gold18'])} تومان
-🥇 طلای ۲۴ عیار: {get_price(prices, ['24ayar','gold24'])} تومان
+🥇 اونس جهانی طلا: {gold}
+🥇 طلای ۱۸ عیار: {gold18}
+🥇 طلای ۲۴ عیار: {gold24}
 
-🔶 بیت‌کوین (BTC): {get_price(prices, ['btc','bitcoin'])} دلار
-🔷 اتریوم (ETH): {get_price(prices, ['eth','ethereum'])} دلار
-🔸 سولانا (SOL): {get_price(prices, ['sol','solana'])} دلار
-🔹 ریپل (XRP): {get_price(prices, ['xrp','ripple'])} دلار
-🔸 کاردانو (ADA): {get_price(prices, ['ada','cardano'])} دلار
-🔹 ترون (TRX): {get_price(prices, ['trx','tron'])} دلار
+🔶 بیت‌کوین (BTC): {btc}
+🔷 اتریوم (ETH): {eth}
+🔸 سولانا (SOL): {sol}
+🔹 ریپل (XRP): {xrp}
+🔸 کاردانو (ADA): {ada}
+🔹 ترون (TRX): {trx}
 
-⏰ زمان بروزرسانی:
-{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+⏰ زمان بروزرسانی: {now}
 
 ➖➖➖➖➖➖➖
 @CryptoBrew
 """
 
+    return message
 
-send_message(message)
-print("Message sent successfully")
+
+def send_message(text):
+
+    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+
+    data = {
+        "chat_id": CHANNEL_ID,
+        "text": text
+    }
+
+    response = requests.post(url, data=data)
+
+    print(response.text)
+
+
+if __name__ == "__main__":
+
+    print("Bot started")
+
+    message = get_prices()
+
+    send_message(message)
+
+    print("Message sent successfully")
