@@ -2,7 +2,7 @@ import os
 import requests
 
 TOKEN = os.getenv("TOKEN")
-CHANNEL_ID = "@CryptoBrew"
+CHANNEL_ID = "@CryptoBrew"  # در صورت نیاز نام یا شناسه عددی کانال را قرار بده
 
 print("TOKEN:", TOKEN)
 
@@ -13,9 +13,10 @@ url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 
 data = {
     "chat_id": CHANNEL_ID,
-    "text": "✅ ربات با موفقیت از GitHub Actions اجرا شد."
+    "text": "✅ تست موفق! ربات با GitHub Actions اجرا شد."
 }
 
 response = requests.post(url, data=data)
 
+print("Status Code:", response.status_code)
 print(response.text)
