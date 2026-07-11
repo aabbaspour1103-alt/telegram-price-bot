@@ -1,4 +1,4 @@
 import os
 
-TOKEN = os.getenv("TOKEN")
-print("TOKEN:", TOKEN)
+TOKEN = os.getenv("8670280483")
+print("8670280483:", TOKEN)
