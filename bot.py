@@ -1,20 +1,9 @@
-import os
 import requests
 
-TOKEN = os.getenv("TOKEN")
-CHANNEL_ID = "-1003901224506"
+TOKEN = "توکن_ربات_خودت"
 
-print("TOKEN:", TOKEN)
+url = f"https://api.telegram.org/bot{TOKEN}/getMe"
 
-def send_message():
-    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-    
-    data = {
-        "chat_id": CHANNEL_ID,
-        "text": "✅ تست ربات انجام شد\nکانال با شناسه عددی بررسی شد."
-    }
+r = requests.get(url)
 
-    response = requests.post(url, data=data)
-    print(response.text)
-
-send_message()
+print(r.text)
