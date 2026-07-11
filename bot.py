@@ -1,15 +1,16 @@
-def get_prices():
+import os
+import requests
 
-    url = "https://api.navasan.tech/api/"
+TOKEN = os.getenv("TOKEN")
+CHANNEL_ID = os.getenv("CHANNEL_ID")
 
-    headers = {
-        "Api-Key": NAVASAN_API_KEY
-    }
+url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 
-    response = requests.get(url, headers=headers)
+data = {
+    "chat_id": CHANNEL_ID,
+    "text": "✅ تست ربات موفق بود"
+}
 
-    print("STATUS:", response.status_code)
-    print("TEXT:")
-    print(response.text)
+response = requests.post(url, data=data)
 
-    return "تست API"
+print(response.text)
