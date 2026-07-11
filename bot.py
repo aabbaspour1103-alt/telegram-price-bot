@@ -11,7 +11,8 @@ def send_message(text):
         "chat_id": CHANNEL_ID,
         "text": text
     }
-    requests.post(url, data=data)
+    response = requests.post(url, data=data)
+    print(response.text)
 
 def get_message():
     return """
@@ -32,4 +33,8 @@ def get_message():
 
 print("Bot started")
 
-# بقیه کدها
+while True:
+    message = get_message()
+    send_message(message)
+    print("Message sent")
+    time.sleep(14400)
