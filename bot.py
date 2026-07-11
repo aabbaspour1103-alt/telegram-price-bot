@@ -1,26 +1,50 @@
+
+import requests
+import os
+from datetime import datetime
+
+BOT_TOKEN = os.environ.get("8670280483:AAHfvP4F49GyVh9iJGLhsyke5eju-cRRbmI")
+CHANNEL_ID = os.environ.get("@CryptoBrew")
+
+def get_price():
+    try:
+        # نمونه API قیمت (قابل تغییر)
+        data = requests.get(
+            "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd"
+        ).json()
+
+        btc = data["bitcoin"]["usd"]
+        eth = data["ethereum"]["usd"]
+        sol = data["solana"]["usd"]
+
+        return btc, eth, sol
+
+    except Exception:
+        return "نامشخص", "نامشخص", "نامشخص"
+
+
+def send_message(text):
+    url = f"https://api.telegram.org/bot{8670280483:AAHfvP4F49GyVh9iJGLhsyke5eju-cRRbmI}/sendMessage"
+
+    requests.post(url, json={
+        "@CryptoBrew": CHANNEL_ID,
+        "text": text
+    })
+
+
+btc, eth, sol = get_price()
+
 message = f"""
-💰 **قیمت لحظه‌ای بازار**
+💰 قیمت لحظه‌ای بازار
 
-💵 دلار آمریکا: {p['dollar']}
-💶 یورو اروپا: {p['euro']}
-💷 پوند انگلیس: {p['pound']}
-🇨🇳 یوان چین: {p['yuan']}
-🇦🇪 درهم امارات: {p['dirham']}
-🇸🇦 ریال عربستان: {p['sar']}
+🔶 بیت‌کوین (BTC): {btc} $
+🔷 اتریوم (ETH): {eth} $
+🔸 سولانا (SOL): {sol} $
 
-🥇 اونس جهانی طلا: {p['gold_ounce']}
-🥇 طلای ۱۸ عیار: {p['gold18']}
-🥇 طلای ۲۴ عیار: {p['gold24']}
-
-🔶 بیت‌کوین (BTC): {p['bitcoin']}
-🔷 اتریوم (ETH): {p['ethereum']}
-🔸 سولانا (SOL): {p['solana']}
-🔹 ریپل (XRP): {p['xrp']}
-🔸 کاردانو (ADA): {p['ada']}
-🔹 ترون (TRX): {p['trx']}
-
-⏰ زمان بروزرسانی: {time.strftime('%Y-%m-%d %H:%M')}
-
-➖➖➖➖➖➖➖
-@CryptoBrew
+⏰ زمان بروزرسانی:
+{datetime.now().strftime("%Y-%m-%d %H:%M")}
 """
+
+send_message(message)
+
+print("Message sent successfully")
