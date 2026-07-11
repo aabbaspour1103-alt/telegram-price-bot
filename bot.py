@@ -2,19 +2,19 @@ import os
 import requests
 
 TOKEN = os.getenv("TOKEN")
-
-print("TOKEN:", TOKEN)
-
 CHANNEL_ID = "@CryptoBrew"
 
-def send_message(text):
-    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-    data = {
-        "chat_id": CHANNEL_ID,
-        "text": text
-    }
+print("شروع تست")
+print("TOKEN:", TOKEN)
 
-    response = requests.post(url, data=data)
-    print(response.text)
+url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 
-send_message("تست ربات")
+data = {
+    "chat_id": CHANNEL_ID,
+    "text": "تست ربات"
+}
+
+response = requests.post(url, data=data)
+
+print(response.text)
+print("پایان تست")
