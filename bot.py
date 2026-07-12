@@ -1,15 +1,13 @@
 import os
 import requests
-import datetime
 import jdatetime
+import asyncio
 from telegram import Bot
 
 
 TOKEN = os.getenv("TOKEN")
 CHANNEL_ID = os.getenv("CHANNEL_ID")
 NAVASAN_API_KEY = os.getenv("NAVASAN_API_KEY")
-
-bot = Bot(token=TOKEN)
 
 
 def toman(value):
@@ -107,15 +105,17 @@ def create_message():
     return text
 
 
-def send_message():
+async def send_message():
 
     message = create_message()
 
-    bot.send_message(
-        chat_id=CHANNEL_ID,
-        text=message
-    )
+    async with Bot(token=TOKEN) as bot:
+
+        await bot.send_message(
+            chat_id=CHANNEL_ID,
+            text=message
+        )
 
 
 if __name__ == "__main__":
-    send_message()
+    asyncio.run(send_message())
