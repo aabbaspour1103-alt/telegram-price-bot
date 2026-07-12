@@ -1,137 +1,130 @@
 import os
-import requests
-from datetime import datetime
-import pytz
+import datetime
 import jdatetime
+import requests
 from telegram import Bot
+from bonbast import Bonbast
+
 
 TOKEN = os.getenv("TOKEN")
-BRS_API_KEY = os.getenv("BRS_API_KEY")
-COINGECKO_API_KEY = os.getenv("COINGECKO_API_KEY")
-
-CHANNEL = "@CryptoBrew"
+CHANNEL_ID = os.getenv("CHANNEL_ID")
 
 bot = Bot(token=TOKEN)
 
 
-def format_price(value):
+def toman(value):
     try:
-        return f"{int(value):,}"
+        return f"{int(value):,} تومان"
     except:
         return "نامشخص"
 
 
-def get_brs():
+def dollar(value):
+    try:
+        return f"${float(value):,.2f}"
+    except:
+        return "نامشخص"
 
-    url = f"https://brsapi.ir/FreeTsetmcBourseApi/Api_Free_Gold_Currency.php?key={BRS_API_KEY}"
+
+def get_currency():
 
     try:
-        data = requests.get(url, timeout=10).json()
+        bb = Bonbast()
+        rates = bb.get_rates()
 
         return {
-            "dollar": data.get("USD"),
-            "euro": data.get("EUR"),
-            "pound": data.get("GBP"),
-            "yuan": data.get("CNY"),
-            "aed": data.get("AED"),
-            "sar": data.get("SAR"),
-            "gold_ounce": data.get("ounce"),
-            "gold18": data.get("gold18"),
-            "gold24": data.get("gold24"),
-            "coin": data.get("coin")
+            "usd": rates.get("usd"),
+            "eur": rates.get("eur"),
+            "gbp": rates.get("gbp"),
+            "cny": rates.get("cny"),
+            "aed": rates.get("aed"),
+            "sar": rates.get("sar"),
+        }
+
+    except Exception as e:
+        print(e)
+        return {}
+
+
+def get_crypto():
+
+    try:
+        url = "https://api.coingecko.com/api/v3/simple/price"
+        
+        params = {
+            "ids":
+            "bitcoin,ethereum,solana,ripple,cardano,tron",
+            "vs_currencies": "usd"
+        }
+
+        data = requests.get(url, params=params).json()
+
+        return {
+            "btc": data["bitcoin"]["usd"],
+            "eth": data["ethereum"]["usd"],
+            "sol": data["solana"]["usd"],
+            "xrp": data["ripple"]["usd"],
+            "ada": data["cardano"]["usd"],
+            "trx": data["tron"]["usd"]
         }
 
     except:
         return {}
 
 
-def get_crypto():
+def shamsi_time():
 
-    url = "https://api.coingecko.com/api/v3/simple/price"
+    now = jdatetime.datetime.now()
 
-    params = {
-        "ids":
-        "bitcoin,ethereum,solana,ripple,cardano,tron,tether",
-        "vs_currencies": "usd"
-    }
-
-    headers = {
-        "x-cg-demo-api-key": COINGECKO_API_KEY
-    }
-
-    try:
-        r = requests.get(
-            url,
-            params=params,
-            headers=headers,
-            timeout=10
-        )
-
-        return r.json()
-
-    except:
-        return {}
+    return now.strftime(
+        "%Y/%m/%d - %H:%M"
+    )
 
 
 def create_message():
 
-    brs = get_brs()
+    currency = get_currency()
     crypto = get_crypto()
-
-
-    tz = pytz.timezone("Asia/Tehran")
-    now = datetime.now(tz)
-
-    shamsi = jdatetime.datetime.fromgregorian(
-        datetime=now
-    )
-
-    date = shamsi.strftime(
-        "%Y/%m/%d %H:%M"
-    )
 
 
     text = f"""
 💰 قیمت لحظه‌ای بازار
 
-💵 دلار آمریکا: {format_price(brs.get('dollar'))} تومان
+💵 دلار آمریکا: {toman(currency.get('usd'))}
 
-💶 یورو اروپا: {format_price(brs.get('euro'))} تومان
+💶 یورو اروپا: {toman(currency.get('eur'))}
 
-💷 پوند انگلیس: {format_price(brs.get('pound'))} تومان
+💷 پوند انگلیس: {toman(currency.get('gbp'))}
 
-🇨🇳 یوان چین: {format_price(brs.get('yuan'))} تومان
+🇨🇳 یوان چین: {toman(currency.get('cny'))}
 
-🇦🇪 درهم امارات: {format_price(brs.get('aed'))} تومان
+🇦🇪 درهم امارات: {toman(currency.get('aed'))}
 
-🇸🇦 ریال عربستان: {format_price(brs.get('sar'))} تومان
-
-🥇 اونس جهانی طلا: {format_price(brs.get('gold_ounce'))} تومان
-
-🥇 طلای ۱۸ عیار: {format_price(brs.get('gold18'))} تومان
-
-🥇 طلای ۲۴ عیار: {format_price(brs.get('gold24'))} تومان
-
-🪙 سکه امامی: {format_price(brs.get('coin'))} تومان
+🇸🇦 ریال عربستان: {toman(currency.get('sar'))}
 
 
-🔶 بیت‌کوین (BTC): {crypto.get('bitcoin',{}).get('usd','نامشخص'):,} دلار
+🥇 اونس جهانی طلا: نامشخص
 
-🔷 اتریوم (ETH): {crypto.get('ethereum',{}).get('usd','نامشخص'):,} دلار
+🥇 طلای ۱۸ عیار: نامشخص
 
-🔸 سولانا (SOL): {crypto.get('solana',{}).get('usd','نامشخص'):,} دلار
+🥇 طلای ۲۴ عیار: نامشخص
 
-🔹 ریپل (XRP): {crypto.get('ripple',{}).get('usd','نامشخص'):,} دلار
 
-🔸 کاردانو (ADA): {crypto.get('cardano',{}).get('usd','نامشخص'):,} دلار
+🔶 بیت‌کوین (BTC): {dollar(crypto.get('btc'))}
 
-🔹 ترون (TRX): {crypto.get('tron',{}).get('usd','نامشخص'):,} دلار
+🔷 اتریوم (ETH): {dollar(crypto.get('eth'))}
 
-💲 تتر (USDT): {crypto.get('tether',{}).get('usd','نامشخص'):,} دلار
+🔸 سولانا (SOL): {dollar(crypto.get('sol'))}
+
+🔹 ریپل (XRP): {dollar(crypto.get('xrp'))}
+
+🔸 کاردانو (ADA): {dollar(crypto.get('ada'))}
+
+🔹 ترون (TRX): {dollar(crypto.get('trx'))}
 
 
 ⏰ زمان بروزرسانی:
-{date}
+{shamsi_time()}
 
 ➖➖➖➖➖➖➖
 @CryptoBrew
@@ -142,9 +135,7 @@ def create_message():
 
 if __name__ == "__main__":
 
-    message = create_message()
-
     bot.send_message(
-        chat_id=CHANNEL,
-        text=message
+        chat_id=CHANNEL_ID,
+        text=create_message()
     )
