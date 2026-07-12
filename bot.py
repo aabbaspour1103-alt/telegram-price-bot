@@ -1,9 +1,7 @@
 import os
-import datetime
-import jdatetime
 import requests
+import jdatetime
 from telegram import Bot
-from bonbast import Bonbast
 
 
 TOKEN = os.getenv("TOKEN")
@@ -29,20 +27,21 @@ def dollar(value):
 def get_currency():
 
     try:
-        bb = Bonbast()
-        rates = bb.get_rates()
+        url = "https://bonbast.com/json"
+
+        data = requests.get(url, timeout=10).json()
 
         return {
-            "usd": rates.get("usd"),
-            "eur": rates.get("eur"),
-            "gbp": rates.get("gbp"),
-            "cny": rates.get("cny"),
-            "aed": rates.get("aed"),
-            "sar": rates.get("sar"),
+            "usd": data.get("usd1"),
+            "eur": data.get("eur1"),
+            "gbp": data.get("gbp1"),
+            "cny": data.get("cny1"),
+            "aed": data.get("aed1"),
+            "sar": data.get("sar1"),
         }
 
     except Exception as e:
-        print(e)
+        print("Currency Error:", e)
         return {}
 
 
@@ -50,14 +49,13 @@ def get_crypto():
 
     try:
         url = "https://api.coingecko.com/api/v3/simple/price"
-        
+
         params = {
-            "ids":
-            "bitcoin,ethereum,solana,ripple,cardano,tron",
+            "ids": "bitcoin,ethereum,solana,ripple,cardano,tron",
             "vs_currencies": "usd"
         }
 
-        data = requests.get(url, params=params).json()
+        data = requests.get(url, params=params, timeout=10).json()
 
         return {
             "btc": data["bitcoin"]["usd"],
@@ -68,7 +66,8 @@ def get_crypto():
             "trx": data["tron"]["usd"]
         }
 
-    except:
+    except Exception as e:
+        print("Crypto Error:", e)
         return {}
 
 
@@ -76,16 +75,13 @@ def shamsi_time():
 
     now = jdatetime.datetime.now()
 
-    return now.strftime(
-        "%Y/%m/%d - %H:%M"
-    )
+    return now.strftime("%Y/%m/%d - %H:%M")
 
 
 def create_message():
 
     currency = get_currency()
     crypto = get_crypto()
-
 
     text = f"""
 💰 قیمت لحظه‌ای بازار
