@@ -2,7 +2,7 @@ name: Telegram Price Bot
 
 on:
   schedule:
-    - cron: "0 */6 * * *"
+    - cron: "0 */4 * * *"
   workflow_dispatch:
 
 jobs:
@@ -20,12 +20,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install requests pytz persiantools python-dotenv
+          python -m pip install --upgrade pip
+          pip install requests bonbast pytz persiantools python-dotenv
 
       - name: Run bot
         env:
           TOKEN: ${{ secrets.TOKEN }}
-          CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
-          NAVASAN_API_KEY: ${{ secrets.NAVASAN_API_KEY }}
+          CHANNEL_ID: "@CryptoBrew"
         run: |
           python bot.py
