@@ -2,7 +2,7 @@ name: Price Bot
 
 on:
   schedule:
-    - cron: "0 */4 * * *"
+    - cron: "0 */5 * * *"
   workflow_dispatch:
 
 jobs:
@@ -21,12 +21,12 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-          pip install bonbast
 
       - name: Run Telegram Bot
         env:
           TOKEN: ${{ secrets.TOKEN }}
           CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
+          NAVASAN_API_KEY: ${{ secrets.NAVASAN_API_KEY }}
 
         run: |
           python bot.py
