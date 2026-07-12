@@ -1,43 +1,44 @@
 import os
-import asyncio
 import requests
+import datetime
 import jdatetime
 from telegram import Bot
-from bonbast import Bonbast
 
 
 TOKEN = os.getenv("TOKEN")
 CHANNEL_ID = os.getenv("CHANNEL_ID")
+NAVASAN_API_KEY = os.getenv("NAVASAN_API_KEY")
 
 bot = Bot(token=TOKEN)
 
 
 def toman(value):
     try:
-        return f"{int(value):,} تومان"
+        return f"{int(float(value)):,} تومان"
     except:
         return "نامشخص"
 
 
-def get_currency():
+def get_navasan():
+
+    url = f"https://api.navasan.tech/latest/?api_key={NAVASAN_API_KEY}"
 
     try:
-        bon = Bonbast()
-
-        data = bon.get_rates()
+        response = requests.get(url, timeout=15)
+        data = response.json()
 
         return {
-            "USD": data.get("usd1"),
-            "EUR": data.get("eur1"),
-            "GBP": data.get("gbp1"),
-            "CNY": data.get("cny1"),
-            "AED": data.get("aed1"),
-            "SAR": data.get("sar1"),
+            "usd": data.get("usd_sell"),
+            "eur": data.get("eur_sell"),
+            "gbp": data.get("gbp_sell"),
+            "aed": data.get("aed_sell"),
+            "gold18": data.get("18ayar"),
+            "gold24": data.get("24ayar"),
+            "ounce": data.get("ounce")
         }
 
     except Exception as e:
-        print("Bonbast Error:", e)
-
+        print("Navasan Error:", e)
         return {}
 
 
@@ -50,72 +51,71 @@ def get_crypto():
             "&vs_currencies=usd"
         )
 
-        r = requests.get(url, timeout=10)
-        data = r.json()
+        response = requests.get(url, timeout=15)
+        data = response.json()
 
         return {
-            "BTC": data["bitcoin"]["usd"],
-            "ETH": data["ethereum"]["usd"]
+            "btc": data["bitcoin"]["usd"],
+            "eth": data["ethereum"]["usd"]
         }
 
     except Exception as e:
-        print("Crypto Error:", e)
-
+        print("CoinGecko Error:", e)
         return {
-            "BTC": None,
-            "ETH": None
+            "btc": 0,
+            "eth": 0
         }
 
 
 def create_message():
 
-    currency = get_currency()
+    currency = get_navasan()
     crypto = get_crypto()
 
-    now = jdatetime.datetime.now().strftime(
-        "%Y/%m/%d - %H:%M"
-    )
+    now = jdatetime.datetime.now().strftime("%Y/%m/%d - %H:%M")
 
     text = f"""
-💰 <b>قیمت لحظه‌ای بازار</b>
+💰 قیمت لحظه‌ای بازار
 
-💵 دلار آمریکا: {toman(currency.get('USD'))}
+💵 دلار آمریکا: {toman(currency.get('usd'))}
 
-💶 یورو اروپا: {toman(currency.get('EUR'))}
+💶 یورو اروپا: {toman(currency.get('eur'))}
 
-💷 پوند انگلیس: {toman(currency.get('GBP'))}
+💷 پوند انگلیس: {toman(currency.get('gbp'))}
 
-🇨🇳 یوان چین: {toman(currency.get('CNY'))}
+🇨🇳 یوان چین: نامشخص
 
-🇦🇪 درهم امارات: {toman(currency.get('AED'))}
+🇦🇪 درهم امارات: {toman(currency.get('aed'))}
 
-🇸🇦 ریال عربستان: {toman(currency.get('SAR'))}
+🇸🇦 ریال عربستان: نامشخص
+
+🥇 اونس جهانی طلا: {toman(currency.get('ounce'))}
+
+🥇 طلای ۱۸ عیار: {toman(currency.get('gold18'))}
+
+🥇 طلای ۲۴ عیار: {toman(currency.get('gold24'))}
+
+🔶 بیت‌کوین (BTC): ${crypto.get('btc'):,}
+
+🔷 اتریوم (ETH): ${crypto.get('eth'):,}
 
 
-🔶 بیت‌کوین (BTC):
-${crypto.get('BTC') or 'نامشخص'}
-
-🔷 اتریوم (ETH):
-${crypto.get('ETH') or 'نامشخص'}
-
-
-🕒 بروزرسانی:
+🕒 آخرین بروزرسانی:
 {now}
 """
 
     return text
 
 
-async def send_post():
+def send_message():
 
-    text = create_message()
+    message = create_message()
 
-    await bot.send_message(
+    bot.send_message(
         chat_id=CHANNEL_ID,
-        text=text,
-        parse_mode="HTML"
+        text=message
     )
 
 
 if __name__ == "__main__":
-    asyncio.run(send_post())
+    send_message()
