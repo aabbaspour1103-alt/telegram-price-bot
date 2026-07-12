@@ -6,8 +6,8 @@ from telegram import Bot
 
 
 TOKEN = os.getenv("TOKEN")
-CHANNEL_ID = os.getenv("CHANNEL_ID")
-NAVASAN_API_KEY = os.getenv("NAVASAN_API_KEY")
+
+CHANNEL_ID = "@CryptoBrew"
 
 
 def toman(value):
@@ -19,7 +19,9 @@ def toman(value):
 
 def get_navasan():
 
-    url = f"https://api.navasan.tech/latest/?api_key={NAVASAN_API_KEY}"
+    api_key = os.getenv("NAVASAN_API_KEY")
+
+    url = f"https://api.navasan.tech/latest/?api_key={api_key}"
 
     try:
         response = requests.get(url, timeout=15)
@@ -59,6 +61,7 @@ def get_crypto():
 
     except Exception as e:
         print("CoinGecko Error:", e)
+
         return {
             "btc": 0,
             "eth": 0
@@ -100,6 +103,8 @@ def create_message():
 
 🕒 آخرین بروزرسانی:
 {now}
+
+📢 @CryptoBrew
 """
 
     return text
