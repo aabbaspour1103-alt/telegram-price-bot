@@ -21,12 +21,12 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
+          pip install bonbast
 
       - name: Run Telegram Bot
         env:
           TOKEN: ${{ secrets.TOKEN }}
-          COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
-          BRS_API_KEY: ${{ secrets.BRS_API_KEY }}
+          CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
 
         run: |
           python bot.py
