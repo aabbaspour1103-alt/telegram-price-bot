@@ -29,6 +29,5 @@ jobs:
           TOKEN: ${{ secrets.TOKEN }}
           CHANNEL_ID: "@CryptoBrew"
           COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
-          BONBAST_API_KEY: ${{ secrets.BONBAST_API_KEY }}
         run: |
           python bot.py
