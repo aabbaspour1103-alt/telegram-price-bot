@@ -1,241 +1,222 @@
 import os
 import requests
-import jdatetime
-from datetime import datetime
-from zoneinfo import ZoneInfo
+from bs4 import BeautifulSoup
 from telegram import Bot
+from datetime import datetime
+import pytz
+import jdatetime
 
 
 TOKEN = os.getenv("TOKEN")
-CHANNEL_ID = "@CryptoBrew"
-
-bot = Bot(token=TOKEN)
+CHANNEL = "@CryptoBrew"
 
 
-# -------------------------
-# Format numbers
-# -------------------------
-
-def toman(value):
-    try:
-        return f"{int(float(value)):,} تومان"
-    except:
-        return "نامشخص"
-
-
-def dollar(value):
+def format_number(value):
     try:
         value = float(value)
 
-        if value >= 100:
-            return f"{int(value):,} دلار"
+        if value >= 1000:
+            return f"{int(value):,}"
 
-        elif value >= 1:
-            return f"{value:,.2f} دلار"
-
-        else:
-            return f"{value:.6f} دلار"
-
+        return f"{value:,.8f}".rstrip("0").rstrip(".")
     except:
         return "نامشخص"
 
 
-# -------------------------
-# TGJU Data
-# -------------------------
-
+# دریافت قیمت دلار و ارز از TGJU
 def get_tgju():
 
-    url = "https://api.tgju.org/v1/data/sana/json"
+    result = {
+        "usd": "نامشخص",
+        "eur": "نامشخص",
+        "gbp": "نامشخص",
+        "aed": "نامشخص",
+        "sar": "نامشخص",
+        "cny": "نامشخص",
+        "gold18": "نامشخص",
+        "gold24": "نامشخص",
+        "ounce": "نامشخص"
+    }
 
     try:
-        r = requests.get(url, timeout=10)
-        data = r.json()
+        url = "https://www.tgju.org/"
+        headers = {
+            "User-Agent": "Mozilla/5.0"
+        }
 
-        return data
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=20
+        )
 
-    except:
-        return {}
+        soup = BeautifulSoup(
+            response.text,
+            "html.parser"
+        )
 
+        text = soup.get_text(" ", strip=True)
 
-def find_price(data, keys):
+        return result
 
-    try:
-        for key in keys:
-            if key in data:
-                return data[key]["price"]
-
-        return None
-
-    except:
-        return None
-
-
-
-def get_market():
-
-    data = get_tgju()
-
-    dollar_price = find_price(
-        data,
-        [
-            "usd",
-            "dollar",
-            "price_dollar"
-        ]
-    )
-
-    ounce = find_price(
-        data,
-        [
-            "ounce",
-            "gold_ounce"
-        ]
-    )
+    except Exception:
+        return result
 
 
-    gold18 = find_price(
-        data,
-        [
-            "gold18",
-            "gold_18"
-        ]
-    )
 
-
-    gold24 = find_price(
-        data,
-        [
-            "gold24",
-            "gold_24"
-        ]
-    )
-
-
-    return (
-        dollar_price,
-        ounce,
-        gold18,
-        gold24
-    )
-
-
-# -------------------------
-# CoinGecko
-# -------------------------
-
+# دریافت ارز دیجیتال از CoinGecko
 def get_crypto():
 
-    url = (
-        "https://api.coingecko.com/api/v3/simple/price"
-        "?ids=bitcoin,ethereum,binancecoin,"
-        "solana,ripple,the-open-network,dogecoin"
-        "&vs_currencies=usd"
-    )
+    coins = {
+        "تتر": "tether",
+        "بیت‌کوین": "bitcoin",
+        "اتریوم": "ethereum",
+        "بایننس کوین": "binancecoin",
+        "سولانا": "solana",
+        "ریپل": "ripple",
+        "تون": "the-open-network",
+        "دوج‌کوین": "dogecoin"
+    }
+
+    result = {}
 
     try:
+        ids = ",".join(coins.values())
+
+        url = (
+            "https://api.coingecko.com/api/v3/simple/price"
+            f"?ids={ids}&vs_currencies=usd"
+        )
 
         data = requests.get(
             url,
-            timeout=10
+            timeout=20
         ).json()
 
+        for name, cid in coins.items():
+            result[name] = format_number(
+                data[cid]["usd"]
+            )
 
-        return {
+    except Exception:
 
-            "BTC":
-            data["bitcoin"]["usd"],
+        for name in coins:
+            result[name] = "نامشخص"
 
-            "ETH":
-            data["ethereum"]["usd"],
-
-            "BNB":
-            data["binancecoin"]["usd"],
-
-            "SOL":
-            data["solana"]["usd"],
-
-            "XRP":
-            data["ripple"]["usd"],
-
-            "TON":
-            data["the-open-network"]["usd"],
-
-            "DOGE":
-            data["dogecoin"]["usd"]
-
-        }
+    return result
 
 
-    except:
-
-        return {}
-
-
-
-# -------------------------
-# Create Message
-# -------------------------
 
 def create_message():
 
-
-    usd, ounce, gold18, gold24 = get_market()
-
+    market = get_tgju()
     crypto = get_crypto()
 
 
     now = datetime.now(
-        ZoneInfo("Asia/Tehran")
+        pytz.timezone("Asia/Tehran")
     )
 
     shamsi = jdatetime.datetime.fromgregorian(
         datetime=now
     )
 
+    date = shamsi.strftime(
+        "%Y/%m/%d"
+    )
 
-    text = f"""
+    time = now.strftime(
+        "%H:%M"
+    )
+
+
+    message = f"""
 💰 قیمت لحظه‌ای بازار
 
-💵 دلار آمریکا: {toman(usd)}
 
-🥇 طلا و ارز:
-
-🥇 اونس جهانی طلا: {dollar(ounce)}
-🥇 طلای ۱۸ عیار: {toman(gold18)}
-🥇 طلای ۲۴ عیار: {toman(gold24)}
+💵 دلار آمریکا:
+{market['usd']} تومان
 
 
-🔶 ارز دیجیتال:
-
-₿ بیت‌کوین (BTC): {dollar(crypto.get("BTC"))}
-🔷 اتریوم (ETH): {dollar(crypto.get("ETH"))}
-🟡 بایننس کوین (BNB): {dollar(crypto.get("BNB"))}
-🟣 سولانا (SOL): {dollar(crypto.get("SOL"))}
-💧 ریپل (XRP): {dollar(crypto.get("XRP"))}
-🔵 تون‌کوین (TON): {dollar(crypto.get("TON"))}
-🐶 دوج‌کوین (DOGE): {dollar(crypto.get("DOGE"))}
+💶 یورو اروپا:
+{market['eur']} تومان
 
 
-🕒 بروزرسانی:
-{shamsi.strftime("%Y/%m/%d")} - {now.strftime("%H:%M")}
+💷 پوند انگلیس:
+{market['gbp']} تومان
+
+
+🇨🇳 یوان چین:
+{market['cny']} تومان
+
+
+🇦🇪 درهم امارات:
+{market['aed']} تومان
+
+
+🇸🇦 ریال عربستان:
+{market['sar']} تومان
+
+
+🥇 طلا:
+
+🌎 اونس جهانی:
+{market['ounce']} دلار
+
+🥇 طلای ۱۸ عیار:
+{market['gold18']} تومان
+
+🥇 طلای ۲۴ عیار:
+{market['gold24']} تومان
+
+
+🪙 ارز دیجیتال:
+
+🟢 تتر:
+{crypto['تتر']} دلار
+
+₿ بیت‌کوین:
+{crypto['بیت‌کوین']} دلار
+
+♦️ اتریوم:
+{crypto['اتریوم']} دلار
+
+🟡 بایننس کوین:
+{crypto['بایننس کوین']} دلار
+
+🟣 سولانا:
+{crypto['سولانا']} دلار
+
+💧 ریپل:
+{crypto['ریپل']} دلار
+
+🔵 تون:
+{crypto['تون']} دلار
+
+🐶 دوج‌کوین:
+{crypto['دوج‌کوین']} دلار
+
+
+📅 تاریخ:
+{date}
+
+⏰ ساعت:
+{time}
 """
 
-    return text
+    return message
 
 
 
-# -------------------------
-# Send Telegram
-# -------------------------
+async def main():
 
-async def send():
-
-    message = create_message()
+    bot = Bot(
+        token=TOKEN
+    )
 
     await bot.send_message(
-        chat_id=CHANNEL_ID,
-        text=message
+        chat_id=CHANNEL,
+        text=create_message()
     )
 
 
@@ -244,4 +225,4 @@ if __name__ == "__main__":
 
     import asyncio
 
-    asyncio.run(send())
+    asyncio.run(main())
