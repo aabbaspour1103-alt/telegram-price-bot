@@ -14,6 +14,9 @@ NAVASAN_API_KEY = os.getenv("NAVASAN_API_KEY")
 
 def format_number(value, decimals=False):
     try:
+        if value is None:
+            return "نامشخص"
+
         num = float(value)
 
         if not decimals:
@@ -47,77 +50,37 @@ def get_value(data, keys):
 
 def get_navasan():
 
-    url = f"https://api.navasan.tech/latest/?api_key={NAVASAN_API_KEY}"
-
     try:
+        url = f"https://api.navasan.tech/latest/?api_key={NAVASAN_API_KEY}"
+
         data = requests.get(url, timeout=15).json()
 
         return {
-
-            "usd": get_value(data, ["usd","usd_sell","dollar"]),
-            "eur": get_value(data, ["eur","euro"]),
-            "gbp": get_value(data, ["gbp","pound"]),
-            "cny": get_value(data, ["cny","yuan"]),
-            "aed": get_value(data, ["aed","dirham"]),
+            "usd": get_value(data, ["usd", "usd_sell", "dollar"]),
+            "eur": get_value(data, ["eur", "euro"]),
+            "gbp": get_value(data, ["gbp", "pound"]),
+            "cny": get_value(data, ["cny", "yuan"]),
+            "aed": get_value(data, ["aed", "dirham"]),
             "sar": get_value(data, ["sar"]),
-
-            "ounce": get_value(
-                data,
-                [
-                    "ons",
-                    "ounce",
-                    "gold_ounce",
-                    "goldounce"
-                ]
-            ),
 
             "gold18": get_value(
                 data,
-                [
-                    "gold18",
-                    "gold_18",
-                    "18k",
-                    "gold_18k",
-                    "geram18"
-                ]
-            ),
-
-            "gold24": get_value(
-                data,
-                [
-                    "gold24",
-                    "gold_24",
-                    "24k",
-                    "gold_24k"
-                ]
+                ["gold18", "gold_18", "18k", "gold_18k", "geram18"]
             ),
 
             "coin": get_value(
                 data,
-                [
-                    "sekkeh",
-                    "emami",
-                    "coin",
-                    "sekkeh_emami"
-                ]
+                ["sekkeh", "emami", "coin", "sekkeh_emami"]
             ),
 
             "half_coin": get_value(
                 data,
-                [
-                    "nim",
-                    "half_coin",
-                    "nim_sekkeh"
-                ]
+                ["nim", "half_coin", "nim_sekkeh"]
             ),
 
             "quarter_coin": get_value(
                 data,
-                [
-                    "rob",
-                    "quarter_coin",
-                    "rob_sekkeh"
-                ]
+                ["rob", "quarter_coin", "rob_sekkeh"]
             )
         }
 
@@ -132,12 +95,12 @@ def get_crypto():
         "solana,ripple,the-open-network,dogecoin"
     )
 
-    url = (
-        "https://api.coingecko.com/api/v3/simple/price"
-        f"?ids={ids}&vs_currencies=usd"
-    )
-
     try:
+        url = (
+            "https://api.coingecko.com/api/v3/simple/price"
+            f"?ids={ids}&vs_currencies=usd"
+        )
+
         data = requests.get(url, timeout=15).json()
 
         return {
@@ -186,25 +149,21 @@ def create_message():
 
 🥇 طلا و سکه :
 
-🌎 اونس جهانی طلا: {format_number(money.get('ounce'),True)} دلار
-
-🥇 طلای ۱۸ عیار: {format_number(money.get('gold18'))} تومان
-🥇 طلای ۲۴ عیار: {format_number(money.get('gold24'))} تومان
-
-🪙 سکه امامی: {format_number(money.get('coin'))} تومان
-🪙 نیم سکه: {format_number(money.get('half_coin'))} تومان
-🪙 ربع سکه: {format_number(money.get('quarter_coin'))} تومان
+🔶 طلای ۱۸ عیار: {format_number(money.get('gold18'))} تومان
+🔶 سکه امامی: {format_number(money.get('coin'))} تومان
+🔶 نیم سکه: {format_number(money.get('half_coin'))} تومان
+🔶 ربع سکه: {format_number(money.get('quarter_coin'))} تومان
 
 
 🥇 ارز دیجیتال:
 
-🔶 بیــــت‌کوین (BTC): {format_number(crypto.get('BTC'),True)} دلار
-🔷 اتــــریــــــوم (ETH): {format_number(crypto.get('ETH'),True)} دلار
-🔸 بایننس‌کوین (BNB): {format_number(crypto.get('BNB'),True)} دلار
-🔹 ســــــــــولانا (SOL): {format_number(crypto.get('SOL'),True)} دلار
-🔸 ریـــــــــــــپل (XRP): {format_number(crypto.get('XRP'),True)} دلار
-🔹 تـــــون‌کوین (TON): {format_number(crypto.get('TON'),True)} دلار
-🔸 دوج‌کــــوین (DOGE): {format_number(crypto.get('DOGE'),True)} دلار
+🔶 بیــــت‌کوین (BTC): {format_number(crypto.get('BTC'), True)} دلار
+🔷 اتــــریــــــوم (ETH): {format_number(crypto.get('ETH'), True)} دلار
+🔸 بایننس‌کوین (BNB): {format_number(crypto.get('BNB'), True)} دلار
+🔹 ســــــــــولانا (SOL): {format_number(crypto.get('SOL'), True)} دلار
+🔸 ریـــــــــــــپل (XRP): {format_number(crypto.get('XRP'), True)} دلار
+🔹 تـــــون‌کوین (TON): {format_number(crypto.get('TON'), True)} دلار
+🔸 دوج‌کــــوین (DOGE): {format_number(crypto.get('DOGE'), True)} دلار
 
 
 🕒 بــروزرسانــی: {iran_time()}
