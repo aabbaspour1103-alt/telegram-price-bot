@@ -3,6 +3,7 @@ import requests
 from datetime import datetime
 import pytz
 import jdatetime
+import asyncio
 from telegram import Bot
 
 
@@ -16,8 +17,7 @@ def format_number(value, decimals=False):
         num = float(value)
 
         if not decimals:
-            num = int(num)
-            return f"{num:,}"
+            return f"{int(num):,}"
 
         if num >= 1000:
             return f"{int(num):,}"
@@ -47,7 +47,7 @@ def get_navasan():
             "gold24": data.get("gold24", {}).get("value")
         }
 
-    except Exception:
+    except:
         return {}
 
 
@@ -73,7 +73,7 @@ def get_crypto():
             "DOGE": data.get("dogecoin", {}).get("usd")
         }
 
-    except Exception:
+    except:
         return {}
 
 
@@ -94,7 +94,7 @@ def create_message():
     money = get_navasan()
     crypto = get_crypto()
 
-    text = f"""
+    return f"""
 💰 قیمت لحظه‌ای بازار
 
 🥈 ارز :
@@ -126,20 +126,20 @@ def create_message():
 - @CryptoBrew
 """
 
-    return text
 
-
-def main():
+async def main():
 
     bot = Bot(token=TOKEN)
 
     message = create_message()
 
-    bot.send_message(
+    await bot.send_message(
         chat_id=CHANNEL_ID,
         text=message
     )
 
+    await bot.close()
+
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
