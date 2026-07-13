@@ -12,6 +12,19 @@ CHANNEL_ID = "@CryptoBrew"
 NAVASAN_API_KEY = os.getenv("NAVASAN_API_KEY")
 
 
+def safe_request(url):
+    try:
+        response = requests.get(url, timeout=15)
+
+        if response.status_code == 200:
+            return response.json()
+
+    except Exception:
+        pass
+
+    return {}
+
+
 def format_number(value, decimals=False):
     try:
         if value is None:
@@ -32,110 +45,149 @@ def format_number(value, decimals=False):
 
 
 def get_value(data, keys):
-    for key in keys:
-        if key in data:
-            item = data[key]
 
-            if isinstance(item, dict):
-                return (
-                    item.get("value")
-                    or item.get("price")
-                    or item.get("current")
-                )
+    try:
+        for key in keys:
 
-            return item
+            if key in data:
+
+                item = data[key]
+
+                if isinstance(item, dict):
+                    return (
+                        item.get("value")
+                        or item.get("price")
+                        or item.get("current")
+                    )
+
+                return item
+
+    except:
+        pass
 
     return None
 
 
+
 def get_navasan():
 
+    result = {}
+
     try:
-        url = f"https://api.navasan.tech/latest/?api_key={NAVASAN_API_KEY}"
 
-        data = requests.get(url, timeout=15).json()
+        url = (
+            "https://api.navasan.tech/latest/"
+            f"?api_key={NAVASAN_API_KEY}"
+        )
 
-        return {
-            "usd": get_value(data, ["usd", "usd_sell", "dollar"]),
-            "eur": get_value(data, ["eur", "euro"]),
-            "gbp": get_value(data, ["gbp", "pound"]),
-            "cny": get_value(data, ["cny", "yuan"]),
-            "aed": get_value(data, ["aed", "dirham"]),
+        data = safe_request(url)
+
+        result = {
+
+            "usd": get_value(data, ["usd","usd_sell","dollar"]),
+            "eur": get_value(data, ["eur","euro"]),
+            "gbp": get_value(data, ["gbp","pound"]),
+            "cny": get_value(data, ["cny","yuan"]),
+            "aed": get_value(data, ["aed","dirham"]),
             "sar": get_value(data, ["sar"]),
+            "try": get_value(data, ["try"]),
+            "rub": get_value(data, ["rub"]),
+            "cad": get_value(data, ["cad"]),
+            "aud": get_value(data, ["aud"])
 
-            "gold18": get_value(
-                data,
-                ["gold18", "gold_18", "18k", "gold_18k", "geram18"]
-            ),
-
-            "coin": get_value(
-                data,
-                ["sekkeh", "emami", "coin", "sekkeh_emami"]
-            ),
-
-            "half_coin": get_value(
-                data,
-                ["nim", "half_coin", "nim_sekkeh"]
-            ),
-
-            "quarter_coin": get_value(
-                data,
-                ["rob", "quarter_coin", "rob_sekkeh"]
-            )
         }
 
+
     except:
-        return {}
+        pass
+
+
+    return result
+
 
 
 def get_crypto():
 
-    ids = (
-        "bitcoin,ethereum,binancecoin,"
-        "solana,ripple,the-open-network,dogecoin"
-    )
+    coins = {
+
+        "BTC":"bitcoin",
+        "ETH":"ethereum",
+        "BNB":"binancecoin",
+        "SOL":"solana",
+        "XRP":"ripple",
+        "TON":"the-open-network",
+        "DOGE":"dogecoin",
+        "ADA":"cardano",
+        "AVAX":"avalanche-2",
+        "DOT":"polkadot",
+        "LTC":"litecoin",
+        "SHIB":"shiba-inu"
+
+    }
+
+
+    result = {}
+
 
     try:
+
+        ids = ",".join(coins.values())
+
         url = (
             "https://api.coingecko.com/api/v3/simple/price"
             f"?ids={ids}&vs_currencies=usd"
         )
 
-        data = requests.get(url, timeout=15).json()
 
-        return {
-            "BTC": data.get("bitcoin", {}).get("usd"),
-            "ETH": data.get("ethereum", {}).get("usd"),
-            "BNB": data.get("binancecoin", {}).get("usd"),
-            "SOL": data.get("solana", {}).get("usd"),
-            "XRP": data.get("ripple", {}).get("usd"),
-            "TON": data.get("the-open-network", {}).get("usd"),
-            "DOGE": data.get("dogecoin", {}).get("usd")
-        }
+        data = safe_request(url)
+
+
+        for name, key in coins.items():
+
+            try:
+                result[name] = data[key]["usd"]
+
+            except:
+                result[name] = None
+
 
     except:
-        return {}
+        pass
+
+
+    return result
+
 
 
 def iran_time():
 
-    tz = pytz.timezone("Asia/Tehran")
-    now = datetime.now(tz)
+    try:
 
-    jalali = jdatetime.datetime.fromgregorian(
-        datetime=now
-    )
+        tz = pytz.timezone("Asia/Tehran")
 
-    return jalali.strftime("%Y/%m/%d - %H:%M")
+        now = datetime.now(tz)
+
+        jalali = jdatetime.datetime.fromgregorian(
+            datetime=now
+        )
+
+        return jalali.strftime("%Y/%m/%d - %H:%M")
+
+    except:
+
+        return "نامشخص"
+
 
 
 def create_message():
 
     money = get_navasan()
+
     crypto = get_crypto()
 
+
     return f"""
-💰 قیمت لحظه‌ای بازار
+💰 قیـمت لحظه‌ای بازار
 
 🥈 ارز :
 
@@ -145,25 +197,26 @@ def create_message():
 🇨🇳 یــــوان چـــین: {format_number(money.get('cny'))} تومان
 🇦🇪 درهــم امارات: {format_number(money.get('aed'))} تومان
 🇸🇦 ریال عربستان: {format_number(money.get('sar'))} تومان
-
-
-🥇 طلا و سکه :
-
-🔶 طلای ۱۸ عیار: {format_number(money.get('gold18'))} تومان
-🔶 سکه امامی: {format_number(money.get('coin'))} تومان
-🔶 نیم سکه: {format_number(money.get('half_coin'))} تومان
-🔶 ربع سکه: {format_number(money.get('quarter_coin'))} تومان
+🇹🇷 لـــــیــــر ترکیه: {format_number(money.get('try'))} تومان
+🇷🇺 روبـــل روسیه: {format_number(money.get('rub'))} تومان
+🇨🇦 دلار کـــــــانادا: {format_number(money.get('cad'))} تومان
+🇦🇺 دلار اســترالیا: {format_number(money.get('aud'))} تومان
 
 
 🥇 ارز دیجیتال:
 
-🔶 بیــــت‌کوین (BTC): {format_number(crypto.get('BTC'), True)} دلار
-🔷 اتــــریــــــوم (ETH): {format_number(crypto.get('ETH'), True)} دلار
-🔸 بایننس‌کوین (BNB): {format_number(crypto.get('BNB'), True)} دلار
-🔹 ســــــــــولانا (SOL): {format_number(crypto.get('SOL'), True)} دلار
-🔸 ریـــــــــــــپل (XRP): {format_number(crypto.get('XRP'), True)} دلار
-🔹 تـــــون‌کوین (TON): {format_number(crypto.get('TON'), True)} دلار
-🔸 دوج‌کــــوین (DOGE): {format_number(crypto.get('DOGE'), True)} دلار
+🔶 بیــــت‌کوین (BTC): {format_number(crypto.get('BTC'),True)} دلار
+🔷 اتــــریــــــوم (ETH): {format_number(crypto.get('ETH'),True)} دلار
+🔸 بایننس‌کوین (BNB): {format_number(crypto.get('BNB'),True)} دلار
+🔹 ســــــــــولانا (SOL): {format_number(crypto.get('SOL'),True)} دلار
+🔸 ریـــــــــــــپل (XRP): {format_number(crypto.get('XRP'),True)} دلار
+🔹 تـــــون‌کوین (TON): {format_number(crypto.get('TON'),True)} دلار
+🔸 دوج‌کـوین (DOGE): {format_number(crypto.get('DOGE'),True)} دلار
+🔹 کـــاردانــــــو (ADA): {format_number(crypto.get('ADA'),True)} دلار
+🔸 آوالانـــــــچ (AVAX): {format_number(crypto.get('AVAX'),True)} دلار
+🔹 پولـــکـــادات (DOT): {format_number(crypto.get('DOT'),True)} دلار
+🔸 لایــــــت‌کوین (LTC): {format_number(crypto.get('LTC'),True)} دلار
+🔹 شیـــــبا اینو (SHIB): {format_number(crypto.get('SHIB'),True)} دلار
 
 
 🕒 بــروزرسانــی: {iran_time()}
@@ -172,15 +225,26 @@ def create_message():
 """
 
 
+
 async def main():
 
-    bot = Bot(token=TOKEN)
+    try:
 
-    await bot.send_message(
-        chat_id=CHANNEL_ID,
-        text=create_message()
-    )
+        bot = Bot(token=TOKEN)
+
+        message = create_message()
+
+        await bot.send_message(
+            chat_id=CHANNEL_ID,
+            text=message
+        )
+
+    except Exception as e:
+
+        print("Telegram Error:", e)
+
 
 
 if __name__ == "__main__":
+
     asyncio.run(main())
