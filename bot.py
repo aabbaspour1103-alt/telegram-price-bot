@@ -5,7 +5,7 @@ import asyncio
 from telegram import Bot
 from datetime import datetime
 import pytz
-from khayyam import JalaliDatetime
+import jdatetime
 
 
 TOKEN = os.getenv("TOKEN")
@@ -28,6 +28,7 @@ def format_number(value):
         return "نامشخص"
 
 
+
 def get_tgju_prices():
 
     url = "https://www.tgju.org"
@@ -36,7 +37,7 @@ def get_tgju_prices():
         "User-Agent": "Mozilla/5.0"
     }
 
-    result = {
+    prices = {
         "dollar": "نامشخص",
         "euro": "نامشخص",
         "pound": "نامشخص",
@@ -79,12 +80,12 @@ def get_tgju_prices():
             )
 
             if item:
-                result[key] = item.text.strip()
+                prices[key] = item.text.strip()
 
-    except Exception:
+    except:
         pass
 
-    return result
+    return prices
 
 
 
@@ -122,7 +123,7 @@ def get_crypto():
                 data[coin]["usd"]
             )
 
-    except Exception:
+    except:
 
         for symbol in coins:
             result[symbol] = "نامشخص"
@@ -136,6 +137,7 @@ def create_message():
     market = get_tgju_prices()
     crypto = get_crypto()
 
+
     tehran = pytz.timezone(
         "Asia/Tehran"
     )
@@ -144,16 +146,20 @@ def create_message():
         tehran
     )
 
-    date = JalaliDatetime(
-        now
-    ).strftime("%Y/%m/%d")
+    jalali = jdatetime.datetime.fromgregorian(
+        datetime=now
+    )
+
+    date = jalali.strftime(
+        "%Y/%m/%d"
+    )
 
     time = now.strftime(
         "%H:%M"
     )
 
 
-    return f"""
+    message = f"""
 💰 قیمت لحظه‌ای بازار
 
 💵 دلار آمریکا: {format_number(market['dollar'])} تومان
@@ -185,6 +191,9 @@ def create_message():
 - @CryptoBrew
 """
 
+    return message
+
+
 
 async def send_message():
 
@@ -196,6 +205,7 @@ async def send_message():
         chat_id=CHANNEL,
         text=create_message()
     )
+
 
 
 if __name__ == "__main__":
