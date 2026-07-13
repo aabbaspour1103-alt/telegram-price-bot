@@ -15,13 +15,10 @@ NAVASAN_API_KEY = os.getenv("NAVASAN_API_KEY")
 def safe_request(url):
     try:
         response = requests.get(url, timeout=15)
-
         if response.status_code == 200:
             return response.json()
-
     except Exception:
         pass
-
     return {}
 
 
@@ -31,6 +28,9 @@ def format_number(value, decimals=False):
             return "نامشخص"
 
         num = float(value)
+
+        if num > 1000000:
+            num = num / 10   # ریال به تومان
 
         if not decimals:
             return f"{int(num):,}"
@@ -45,10 +45,8 @@ def format_number(value, decimals=False):
 
 
 def get_value(data, keys):
-
     try:
         for key in keys:
-
             if key in data:
 
                 item = data[key]
@@ -68,7 +66,6 @@ def get_value(data, keys):
     return None
 
 
-
 def get_navasan():
 
     result = {}
@@ -82,8 +79,10 @@ def get_navasan():
 
         data = safe_request(url)
 
+
         result = {
 
+            # ارز
             "usd": get_value(data, ["usd","usd_sell","dollar"]),
             "eur": get_value(data, ["eur","euro"]),
             "gbp": get_value(data, ["gbp","pound"]),
@@ -93,12 +92,42 @@ def get_navasan():
             "try": get_value(data, ["try"]),
             "rub": get_value(data, ["rub"]),
             "cad": get_value(data, ["cad"]),
-            "aud": get_value(data, ["aud"])
+            "aud": get_value(data, ["aud"]),
+
+
+            # طلا و سکه
+            "gold18":
+                get_value(data,
+                ["gold_18k","gold18","18k"]),
+
+            "mithqal":
+                get_value(data,
+                ["mithqal","mesghal","gold_mithqal"]),
+
+            "emami":
+                get_value(data,
+                ["sekkeh_emami","emami","coin_emami"]),
+
+            "bahar":
+                get_value(data,
+                ["sekkeh_bahar","bahar","coin_bahar"]),
+
+            "nim":
+                get_value(data,
+                ["nim","half_coin"]),
+
+            "rob":
+                get_value(data,
+                ["rob","quarter_coin"]),
+
+            "gerami":
+                get_value(data,
+                ["gerami","gold_coin"])
 
         }
 
 
-    except:
+    except Exception:
         pass
 
 
@@ -128,7 +157,6 @@ def get_crypto():
 
     result = {}
 
-
     try:
 
         ids = ",".join(coins.values())
@@ -138,9 +166,7 @@ def get_crypto():
             f"?ids={ids}&vs_currencies=usd"
         )
 
-
         data = safe_request(url)
-
 
         for name, key in coins.items():
 
@@ -149,7 +175,6 @@ def get_crypto():
 
             except:
                 result[name] = None
-
 
     except:
         pass
@@ -203,6 +228,17 @@ def create_message():
 🇦🇺 دلار اســترالیا: {format_number(money.get('aud'))} تومان
 
 
+🥇 طلا و سکه :
+
+🏅 طلای 18 عیار: {format_number(money.get('gold18'))} تومان
+🏅 مثقال طلای آبشده: {format_number(money.get('mithqal'))} تومان
+🪙 سکه امامی: {format_number(money.get('emami'))} تومان
+🪙 سکه تمام بهار آزادی: {format_number(money.get('bahar'))} تومان
+🪙 نیم سکه: {format_number(money.get('nim'))} تومان
+🪙 ربع سکه: {format_number(money.get('rob'))} تومان
+🪙 سکه گرمی: {format_number(money.get('gerami'))} تومان
+
+
 🥇 ارز دیجیتال:
 
 🔶 بیــــت‌کوین (BTC): {format_number(crypto.get('BTC'),True)} دلار
@@ -225,18 +261,15 @@ def create_message():
 """
 
 
-
 async def main():
 
     try:
 
         bot = Bot(token=TOKEN)
 
-        message = create_message()
-
         await bot.send_message(
             chat_id=CHANNEL_ID,
-            text=message
+            text=create_message()
         )
 
     except Exception as e:
@@ -246,5 +279,4 @@ async def main():
 
 
 if __name__ == "__main__":
-
     asyncio.run(main())
