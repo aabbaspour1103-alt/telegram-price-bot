@@ -3,6 +3,7 @@ import requests
 from datetime import datetime
 import pytz
 import jdatetime
+import asyncio
 from telegram import Bot
 
 
@@ -28,10 +29,8 @@ def format_number(value, decimals=False):
 
 
 def get_value(data, keys):
-
     for key in keys:
         if key in data:
-
             item = data[key]
 
             if isinstance(item, dict):
@@ -51,52 +50,29 @@ def get_navasan():
     url = f"https://api.navasan.tech/latest/?api_key={NAVASAN_API_KEY}"
 
     try:
-        data = requests.get(
-            url,
-            timeout=15
-        ).json()
-
+        data = requests.get(url, timeout=15).json()
 
         return {
-
             "usd": get_value(data, ["usd","usd_sell","dollar"]),
-
             "eur": get_value(data, ["eur","euro"]),
-
             "gbp": get_value(data, ["gbp","pound"]),
-
             "cny": get_value(data, ["cny","yuan"]),
-
             "aed": get_value(data, ["aed","dirham"]),
-
             "sar": get_value(data, ["sar"]),
 
             "gold18": get_value(
                 data,
-                [
-                    "gold18",
-                    "gold_18",
-                    "18k",
-                    "gold_18k",
-                    "geram18"
-                ]
+                ["gold18","gold_18","18k","gold_18k","geram18"]
             ),
 
             "gold24": get_value(
                 data,
-                [
-                    "gold24",
-                    "gold_24",
-                    "24k",
-                    "gold_24k"
-                ]
+                ["gold24","gold_24","24k","gold_24k"]
             )
         }
 
-
-    except Exception:
+    except:
         return {}
-
 
 
 def get_crypto():
@@ -106,44 +82,31 @@ def get_crypto():
         "solana,ripple,the-open-network,dogecoin"
     )
 
-
     url = (
         "https://api.coingecko.com/api/v3/simple/price"
         f"?ids={ids}&vs_currencies=usd"
     )
 
-
     try:
-
-        data = requests.get(
-            url,
-            timeout=15
-        ).json()
-
+        data = requests.get(url, timeout=15).json()
 
         return {
-
-            "BTC": data.get("bitcoin",{}).get("usd"),
-            "ETH": data.get("ethereum",{}).get("usd"),
-            "BNB": data.get("binancecoin",{}).get("usd"),
-            "SOL": data.get("solana",{}).get("usd"),
-            "XRP": data.get("ripple",{}).get("usd"),
-            "TON": data.get("the-open-network",{}).get("usd"),
-            "DOGE": data.get("dogecoin",{}).get("usd")
-
+            "BTC": data.get("bitcoin", {}).get("usd"),
+            "ETH": data.get("ethereum", {}).get("usd"),
+            "BNB": data.get("binancecoin", {}).get("usd"),
+            "SOL": data.get("solana", {}).get("usd"),
+            "XRP": data.get("ripple", {}).get("usd"),
+            "TON": data.get("the-open-network", {}).get("usd"),
+            "DOGE": data.get("dogecoin", {}).get("usd")
         }
 
-
     except:
-
         return {}
-
 
 
 def iran_time():
 
     tz = pytz.timezone("Asia/Tehran")
-
     now = datetime.now(tz)
 
     jalali = jdatetime.datetime.fromgregorian(
@@ -153,13 +116,10 @@ def iran_time():
     return jalali.strftime("%Y/%m/%d - %H:%M")
 
 
-
 def create_message():
 
     money = get_navasan()
-
     crypto = get_crypto()
-
 
     return f"""
 💰 قیمت لحظه‌ای بازار
@@ -194,17 +154,17 @@ def create_message():
 """
 
 
-def main():
+async def main():
 
     bot = Bot(
         token=TOKEN
     )
 
-    bot.send_message(
+    await bot.send_message(
         chat_id=CHANNEL_ID,
         text=create_message()
     )
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
