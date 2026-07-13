@@ -25,6 +25,7 @@ jobs:
       - name: Run Telegram Bot
         env:
           TOKEN: ${{ secrets.TOKEN }}
+          NAVASAN_API_KEY: ${{ secrets.NAVASAN_API_KEY }}
 
         run: |
           python bot.py
