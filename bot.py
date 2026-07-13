@@ -1,10 +1,11 @@
 import os
 import requests
 from bs4 import BeautifulSoup
+import asyncio
 from telegram import Bot
 from datetime import datetime
 import pytz
-import jdatetime
+from khayyam import JalaliDatetime
 
 
 TOKEN = os.getenv("TOKEN")
@@ -13,37 +14,41 @@ CHANNEL = "@CryptoBrew"
 
 def format_number(value):
     try:
-        value = float(value)
+        value = float(str(value).replace(",", ""))
 
         if value >= 1000:
             return f"{int(value):,}"
 
-        return f"{value:,.8f}".rstrip("0").rstrip(".")
+        if value < 1:
+            return f"{value:.6f}".rstrip("0").rstrip(".")
+
+        return f"{value:,.2f}".rstrip("0").rstrip(".")
+
     except:
         return "نامشخص"
 
 
-# دریافت قیمت دلار و ارز از TGJU
-def get_tgju():
+def get_tgju_prices():
+
+    url = "https://www.tgju.org"
+
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
 
     result = {
-        "usd": "نامشخص",
-        "eur": "نامشخص",
-        "gbp": "نامشخص",
-        "aed": "نامشخص",
-        "sar": "نامشخص",
-        "cny": "نامشخص",
+        "dollar": "نامشخص",
+        "euro": "نامشخص",
+        "pound": "نامشخص",
+        "yuan": "نامشخص",
+        "dirham": "نامشخص",
+        "riyal": "نامشخص",
+        "ounce": "نامشخص",
         "gold18": "نامشخص",
-        "gold24": "نامشخص",
-        "ounce": "نامشخص"
+        "gold24": "نامشخص"
     }
 
     try:
-        url = "https://www.tgju.org/"
-        headers = {
-            "User-Agent": "Mozilla/5.0"
-        }
-
         response = requests.get(
             url,
             headers=headers,
@@ -55,37 +60,55 @@ def get_tgju():
             "html.parser"
         )
 
-        text = soup.get_text(" ", strip=True)
+        ids = {
+            "dollar": "price_dollar_rl",
+            "euro": "price_eur",
+            "pound": "price_gbp",
+            "yuan": "price_cny",
+            "dirham": "price_aed",
+            "riyal": "price_sar",
+            "ounce": "ounce",
+            "gold18": "geram18",
+            "gold24": "geram24"
+        }
 
-        return result
+        for key, item_id in ids.items():
+
+            item = soup.find(
+                id=item_id
+            )
+
+            if item:
+                result[key] = item.text.strip()
 
     except Exception:
-        return result
+        pass
+
+    return result
 
 
 
-# دریافت ارز دیجیتال از CoinGecko
 def get_crypto():
 
     coins = {
-        "تتر": "tether",
-        "بیت‌کوین": "bitcoin",
-        "اتریوم": "ethereum",
-        "بایننس کوین": "binancecoin",
-        "سولانا": "solana",
-        "ریپل": "ripple",
-        "تون": "the-open-network",
-        "دوج‌کوین": "dogecoin"
+        "BTC": "bitcoin",
+        "ETH": "ethereum",
+        "BNB": "binancecoin",
+        "SOL": "solana",
+        "XRP": "ripple",
+        "TON": "the-open-network",
+        "DOGE": "dogecoin"
     }
 
     result = {}
 
     try:
-        ids = ",".join(coins.values())
 
         url = (
             "https://api.coingecko.com/api/v3/simple/price"
-            f"?ids={ids}&vs_currencies=usd"
+            "?ids="
+            + ",".join(coins.values())
+            + "&vs_currencies=usd"
         )
 
         data = requests.get(
@@ -93,15 +116,16 @@ def get_crypto():
             timeout=20
         ).json()
 
-        for name, cid in coins.items():
-            result[name] = format_number(
-                data[cid]["usd"]
+        for symbol, coin in coins.items():
+
+            result[symbol] = format_number(
+                data[coin]["usd"]
             )
 
     except Exception:
 
-        for name in coins:
-            result[name] = "نامشخص"
+        for symbol in coins:
+            result[symbol] = "نامشخص"
 
     return result
 
@@ -109,106 +133,60 @@ def get_crypto():
 
 def create_message():
 
-    market = get_tgju()
+    market = get_tgju_prices()
     crypto = get_crypto()
 
+    tehran = pytz.timezone(
+        "Asia/Tehran"
+    )
 
     now = datetime.now(
-        pytz.timezone("Asia/Tehran")
+        tehran
     )
 
-    shamsi = jdatetime.datetime.fromgregorian(
-        datetime=now
-    )
-
-    date = shamsi.strftime(
-        "%Y/%m/%d"
-    )
+    date = JalaliDatetime(
+        now
+    ).strftime("%Y/%m/%d")
 
     time = now.strftime(
         "%H:%M"
     )
 
 
-    message = f"""
+    return f"""
 💰 قیمت لحظه‌ای بازار
 
+💵 دلار آمریکا: {format_number(market['dollar'])} تومان
+💶 یورو اروپا: {format_number(market['euro'])} تومان
+💷 پوند انگلیس: {format_number(market['pound'])} تومان
+🇨🇳 یوان چین: {format_number(market['yuan'])} تومان
+🇦🇪 درهم امارات: {format_number(market['dirham'])} تومان
+🇸🇦 ریال عربستان: {format_number(market['riyal'])} تومان
 
-💵 دلار آمریکا:
-{market['usd']} تومان
+🥇 طلا و ارز:
 
+🥇 اونس جهانی طلا: {format_number(market['ounce'])} دلار
+🥇 طلای ۱۸ عیار: {format_number(market['gold18'])} تومان
+🥇 طلای ۲۴ عیار: {format_number(market['gold24'])} تومان
 
-💶 یورو اروپا:
-{market['eur']} تومان
+🔶 ارز دیجیتال:
 
+₿ بیت‌کوین (BTC): {crypto['BTC']} دلار
+🔷 اتریوم (ETH): {crypto['ETH']} دلار
+🟡 بایننس کوین (BNB): {crypto['BNB']} دلار
+🟣 سولانا (SOL): {crypto['SOL']} دلار
+💧 ریپل (XRP): {crypto['XRP']} دلار
+🔵 تون‌کوین (TON): {crypto['TON']} دلار
+🐶 دوج‌کوین (DOGE): {crypto['DOGE']} دلار
 
-💷 پوند انگلیس:
-{market['gbp']} تومان
+🕒 بروزرسانی:
+{date} - {time}
 
-
-🇨🇳 یوان چین:
-{market['cny']} تومان
-
-
-🇦🇪 درهم امارات:
-{market['aed']} تومان
-
-
-🇸🇦 ریال عربستان:
-{market['sar']} تومان
-
-
-🥇 طلا:
-
-🌎 اونس جهانی:
-{market['ounce']} دلار
-
-🥇 طلای ۱۸ عیار:
-{market['gold18']} تومان
-
-🥇 طلای ۲۴ عیار:
-{market['gold24']} تومان
-
-
-🪙 ارز دیجیتال:
-
-🟢 تتر:
-{crypto['تتر']} دلار
-
-₿ بیت‌کوین:
-{crypto['بیت‌کوین']} دلار
-
-♦️ اتریوم:
-{crypto['اتریوم']} دلار
-
-🟡 بایننس کوین:
-{crypto['بایننس کوین']} دلار
-
-🟣 سولانا:
-{crypto['سولانا']} دلار
-
-💧 ریپل:
-{crypto['ریپل']} دلار
-
-🔵 تون:
-{crypto['تون']} دلار
-
-🐶 دوج‌کوین:
-{crypto['دوج‌کوین']} دلار
-
-
-📅 تاریخ:
-{date}
-
-⏰ ساعت:
-{time}
+- @CryptoBrew
 """
 
-    return message
 
-
-
-async def main():
+async def send_message():
 
     bot = Bot(
         token=TOKEN
@@ -220,9 +198,8 @@ async def main():
     )
 
 
-
 if __name__ == "__main__":
 
-    import asyncio
-
-    asyncio.run(main())
+    asyncio.run(
+        send_message()
+    )
