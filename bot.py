@@ -14,60 +14,43 @@ NAVASAN_API_KEY = os.getenv("NAVASAN_API_KEY")
 
 def safe_request(url):
     try:
-        response = requests.get(url, timeout=15)
-
-        if response.status_code == 200:
-            try:
-                return response.json()
-            except:
-                return {}
-
+        r = requests.get(url, timeout=15)
+        if r.status_code == 200:
+            return r.json()
     except Exception as e:
-        print("API Error:", e)
-
+        print("API:", e)
     return {}
 
 
-def format_number(value, decimals=False):
-
+def format_number(value, crypto=False):
     try:
-
         if value is None:
             return "نامشخص"
 
         num = float(value)
 
-        if num > 1000000:
+        if not crypto and num > 1000000:
             num /= 10
 
-        if decimals:
-
+        if crypto:
             if num >= 1000:
                 return f"{num:,.2f}"
-
-            return f"{num:,.8f}".rstrip("0").rstrip(",")
+            return f"{num:,.6f}".rstrip("0").rstrip(".")
 
         return f"{int(num):,}"
 
-
     except:
-
         return "نامشخص"
 
 
 
 def get_value(data, keys):
-
     try:
-
-        for key in keys:
-
-            if key in data:
-
-                item = data[key]
+        for k in keys:
+            if k in data:
+                item = data[k]
 
                 if isinstance(item, dict):
-
                     return (
                         item.get("value")
                         or item.get("price")
@@ -75,102 +58,49 @@ def get_value(data, keys):
                     )
 
                 return item
-
-
     except:
         pass
-
 
     return None
 
 
 
-def get_navasan():
+def get_currency():
 
-    result = {}
+    data = safe_request(
+        f"https://api.navasan.tech/latest/?api_key={NAVASAN_API_KEY}"
+    )
 
-    try:
-
-        url = (
-            "https://api.navasan.tech/latest/"
-            f"?api_key={NAVASAN_API_KEY}"
-        )
-
-        data = safe_request(url)
-
-
-        result = {
-
-            "usd": get_value(data, ["usd","usd_sell","dollar"]),
-            "eur": get_value(data, ["eur","euro"]),
-            "gbp": get_value(data, ["gbp","pound"]),
-            "cny": get_value(data, ["cny","yuan"]),
-            "aed": get_value(data, ["aed","dirham"]),
-            "sar": get_value(data, ["sar"]),
-            "try": get_value(data, ["try"]),
-            "rub": get_value(data, ["rub"]),
-            "cad": get_value(data, ["cad"]),
-            "aud": get_value(data, ["aud"]),
-
-            "gold18": get_value(
-                data,
-                ["gold_18k","gold18","18k"]
-            ),
-
-            "mithqal": get_value(
-                data,
-                ["mithqal","mesghal","gold_mithqal"]
-            ),
-
-            "emami": get_value(
-                data,
-                ["sekkeh_emami","emami","coin_emami"]
-            ),
-
-            "bahar": get_value(
-                data,
-                ["sekkeh_bahar","bahar","coin_bahar"]
-            ),
-
-            "nim": get_value(
-                data,
-                ["nim","half_coin"]
-            ),
-
-            "rob": get_value(
-                data,
-                ["rob","quarter_coin"]
-            ),
-
-            "gerami": get_value(
-                data,
-                ["gerami","gold_coin"]
-            )
-
-        }
+    return {
+        "usd": get_value(data, ["usd","usd_sell","dollar"]),
+        "eur": get_value(data, ["eur","euro"]),
+        "gbp": get_value(data, ["gbp","pound"]),
+        "cny": get_value(data, ["cny","yuan"]),
+        "aed": get_value(data, ["aed","dirham"]),
+        "sar": get_value(data, ["sar"]),
+        "try": get_value(data, ["try"]),
+        "rub": get_value(data, ["rub"]),
+        "cad": get_value(data, ["cad"]),
+        "aud": get_value(data, ["aud"])
+    }
 
 
-    except Exception as e:
 
-        print("Navasan Error:", e)
-
-
-    return result
-    def get_crypto():
+def get_crypto():
 
     coins = {
-        "BTC": "bitcoin",
-        "ETH": "ethereum",
-        "BNB": "binancecoin",
-        "SOL": "solana",
-        "XRP": "ripple",
-        "TON": "the-open-network",
-        "DOGE": "dogecoin",
-        "ADA": "cardano",
-        "AVAX": "avalanche-2",
-        "DOT": "polkadot",
-        "LTC": "litecoin",
-        "SHIB": "shiba-inu"
+        "BTC":"bitcoin",
+        "ETH":"ethereum",
+        "BNB":"binancecoin",
+        "SOL":"solana",
+        "XRP":"ripple",
+        "TON":"the-open-network",
+        "DOGE":"dogecoin",
+        "ADA":"cardano",
+        "AVAX":"avalanche-2",
+        "DOT":"polkadot",
+        "LTC":"litecoin",
+        "SHIB":"shiba-inu"
     }
 
     result = {}
@@ -179,27 +109,16 @@ def get_navasan():
 
         ids = ",".join(coins.values())
 
-        url = (
+        data = safe_request(
             "https://api.coingecko.com/api/v3/simple/price"
             f"?ids={ids}&vs_currencies=usd"
         )
 
-        data = safe_request(url)
-
-
         for name, key in coins.items():
-
-            try:
-                result[name] = data.get(key, {}).get("usd")
-
-            except:
-                result[name] = None
-
+            result[name] = data.get(key, {}).get("usd")
 
     except Exception as e:
-
-        print("Crypto Error:", e)
-
+        print("Crypto:", e)
 
     return result
 
@@ -208,32 +127,24 @@ def get_navasan():
 def iran_time():
 
     try:
-
         tz = pytz.timezone("Asia/Tehran")
-
         now = datetime.now(tz)
 
-        jalali = jdatetime.datetime.fromgregorian(
+        j = jdatetime.datetime.fromgregorian(
             datetime=now
         )
 
-        return jalali.strftime(
-            "%Y/%m/%d - %H:%M"
-        )
-
+        return j.strftime("%Y/%m/%d - %H:%M")
 
     except:
-
         return "نامشخص"
 
 
 
 def create_message():
 
-    money = get_navasan()
-
+    money = get_currency()
     crypto = get_crypto()
-
 
     return f"""
 💰 قیـمت لحظه‌ای بازار
@@ -250,17 +161,6 @@ def create_message():
 🇷🇺 روبـــل روسیه: {format_number(money.get('rub'))} تومان
 🇨🇦 دلار کـــــــانادا: {format_number(money.get('cad'))} تومان
 🇦🇺 دلار اســترالیا: {format_number(money.get('aud'))} تومان
-
-
-🥇 طلا و سکه :
-
-🏅 طلای 18 عیار: {format_number(money.get('gold18'))} تومان
-🏅 مثقال طلای آبشده: {format_number(money.get('mithqal'))} تومان
-🪙 سکه امامی: {format_number(money.get('emami'))} تومان
-🪙 سکه تمام بهار آزادی: {format_number(money.get('bahar'))} تومان
-🪙 نیم سکه: {format_number(money.get('nim'))} تومان
-🪙 ربع سکه: {format_number(money.get('rob'))} تومان
-🪙 سکه گرمی: {format_number(money.get('gerami'))} تومان
 
 
 🥇 ارز دیجیتال:
@@ -285,38 +185,20 @@ def create_message():
 """
 
 
-
 async def main():
 
     try:
-
-        if not TOKEN:
-
-            print("TOKEN missing")
-            return
-
-
         bot = Bot(token=TOKEN)
-
-
-        message = create_message()
-
 
         await bot.send_message(
             chat_id=CHANNEL_ID,
-            text=message
+            text=create_message()
         )
 
-
-        print("Message sent successfully")
-
-
     except Exception as e:
-
         print("Telegram Error:", e)
 
 
 
 if __name__ == "__main__":
-
     asyncio.run(main())
