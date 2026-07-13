@@ -53,6 +53,7 @@ def get_navasan():
         data = requests.get(url, timeout=15).json()
 
         return {
+
             "usd": get_value(data, ["usd","usd_sell","dollar"]),
             "eur": get_value(data, ["eur","euro"]),
             "gbp": get_value(data, ["gbp","pound"]),
@@ -60,14 +61,63 @@ def get_navasan():
             "aed": get_value(data, ["aed","dirham"]),
             "sar": get_value(data, ["sar"]),
 
+            "ounce": get_value(
+                data,
+                [
+                    "ons",
+                    "ounce",
+                    "gold_ounce",
+                    "goldounce"
+                ]
+            ),
+
             "gold18": get_value(
                 data,
-                ["gold18","gold_18","18k","gold_18k","geram18"]
+                [
+                    "gold18",
+                    "gold_18",
+                    "18k",
+                    "gold_18k",
+                    "geram18"
+                ]
             ),
 
             "gold24": get_value(
                 data,
-                ["gold24","gold_24","24k","gold_24k"]
+                [
+                    "gold24",
+                    "gold_24",
+                    "24k",
+                    "gold_24k"
+                ]
+            ),
+
+            "coin": get_value(
+                data,
+                [
+                    "sekkeh",
+                    "emami",
+                    "coin",
+                    "sekkeh_emami"
+                ]
+            ),
+
+            "half_coin": get_value(
+                data,
+                [
+                    "nim",
+                    "half_coin",
+                    "nim_sekkeh"
+                ]
+            ),
+
+            "quarter_coin": get_value(
+                data,
+                [
+                    "rob",
+                    "quarter_coin",
+                    "rob_sekkeh"
+                ]
             )
         }
 
@@ -133,10 +183,18 @@ def create_message():
 🇦🇪 درهــم امارات: {format_number(money.get('aed'))} تومان
 🇸🇦 ریال عربستان: {format_number(money.get('sar'))} تومان
 
-🥇 طلا :
+
+🥇 طلا و سکه :
+
+🌎 اونس جهانی طلا: {format_number(money.get('ounce'),True)} دلار
 
 🥇 طلای ۱۸ عیار: {format_number(money.get('gold18'))} تومان
 🥇 طلای ۲۴ عیار: {format_number(money.get('gold24'))} تومان
+
+🪙 سکه امامی: {format_number(money.get('coin'))} تومان
+🪙 نیم سکه: {format_number(money.get('half_coin'))} تومان
+🪙 ربع سکه: {format_number(money.get('quarter_coin'))} تومان
+
 
 🥇 ارز دیجیتال:
 
@@ -148,6 +206,7 @@ def create_message():
 🔹 تـــــون‌کوین (TON): {format_number(crypto.get('TON'),True)} دلار
 🔸 دوج‌کــــوین (DOGE): {format_number(crypto.get('DOGE'),True)} دلار
 
+
 🕒 بــروزرسانــی: {iran_time()}
 
 - @CryptoBrew
@@ -156,9 +215,7 @@ def create_message():
 
 async def main():
 
-    bot = Bot(
-        token=TOKEN
-    )
+    bot = Bot(token=TOKEN)
 
     await bot.send_message(
         chat_id=CHANNEL_ID,
