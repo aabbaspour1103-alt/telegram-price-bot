@@ -24,7 +24,22 @@ def get_prices():
 
     prices = {}
 
+    keys = [
+        "gold18",
+        "mithqal",
+        "emami",
+        "usd",
+        "eur",
+        "gbp",
+        "aed",
+        "sar",
+        "try",
+        "cny",
+        "usdt"
+    ]
+
     try:
+
         response = requests.get(
             URL,
             headers=HEADERS,
@@ -47,39 +62,77 @@ def get_prices():
         patterns = {
 
             # طلا و سکه
-            "gold18": r"طلا ۱۸\s+([\d,]+)",
-            "mithqal": r"مثقال طلا\s+([\d,]+)",
-            "emami": r"سکه\s+([\d,]+)",
+            "gold18": [
+                r"طلا ۱۸\s+([\d,]+)",
+                r"طلای ۱۸ عیار\s+([\d,]+)"
+            ],
+
+            "mithqal": [
+                r"مثقال طلا\s+([\d,]+)"
+            ],
+
+            "emami": [
+                r"سکه\s+([\d,]+)"
+            ],
 
 
-            # ارزها
-            "usd": r"دلار\s+([\d,]+)",
-            "eur": r"یورو\s+([\d,]+)",
-            "gbp": r"پوند\s+([\d,]+)",
-            "aed": r"درهم امارات\s+([\d,]+)",
-            "sar": r"ریال عربستان\s+([\d,]+)",
-            "try": r"لیر ترکیه\s+([\d,]+)",
-            "cny": r"یوان چین\s+([\d,]+)",
+            # ارز
+            "usd": [
+                r"دلار\s+([\d,]+)"
+            ],
+
+            "eur": [
+                r"یورو\s+([\d,]+)"
+            ],
+
+            "gbp": [
+                r"پوند(?: انگلیس)?\s+([\d,]+)",
+                r"پوند\s*انگلیس\s+([\d,]+)"
+            ],
+
+            "aed": [
+                r"درهم امارات\s+([\d,]+)",
+                r"درهم\s+([\d,]+)"
+            ],
+
+            "sar": [
+                r"ریال عربستان\s+([\d,]+)"
+            ],
+
+            "try": [
+                r"لیر ترکیه\s+([\d,]+)"
+            ],
+
+            "cny": [
+                r"یوان چین\s+([\d,]+)"
+            ],
 
 
-            # ارز دیجیتال
-            "usdt": r"تتر\s+([\d,]+)"
+            # کریپتو
+            "usdt": [
+                r"تتر\s+([\d,]+)"
+            ]
         }
 
 
-        for key, pattern in patterns.items():
+        for key in keys:
 
-            result = re.search(
-                pattern,
-                text
-            )
+            prices[key] = None
 
-            if result:
-                prices[key] = clean_number(
-                    result.group(1)
+            for pattern in patterns[key]:
+
+                result = re.search(
+                    pattern,
+                    text
                 )
-            else:
-                prices[key] = None
+
+                if result:
+
+                    prices[key] = clean_number(
+                        result.group(1)
+                    )
+
+                    break
 
 
     except Exception as e:
@@ -89,20 +142,7 @@ def get_prices():
             e
         )
 
-        # اگر سایت قطع بود، کل ربات نخوابد
-        for key in [
-            "gold18",
-            "mithqal",
-            "emami",
-            "usd",
-            "eur",
-            "gbp",
-            "aed",
-            "sar",
-            "try",
-            "cny",
-            "usdt"
-        ]:
+        for key in keys:
             prices[key] = None
 
 
