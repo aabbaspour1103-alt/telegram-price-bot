@@ -1,13 +1,23 @@
 import requests
-from bs4 import BeautifulSoup
 import re
+from bs4 import BeautifulSoup
 
 
-URL = "https://www.tgju.org"
+TGJU_URL = "https://www.tgju.org"
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0"
 }
+
+
+COINGECKO_URL = (
+    "https://api.coingecko.com/api/v3/simple/price"
+    "?ids=bitcoin,ethereum,binancecoin,solana,ripple,"
+    "the-open-network,dogecoin,tether"
+    "&vs_currencies=usd"
+    "&include_24hr_change=true"
+)
+
 
 
 def clean_number(value):
@@ -20,9 +30,9 @@ def clean_number(value):
 
 
 
-def get_prices():
+def get_tgju():
 
-    prices = {}
+    data = {}
 
     keys = [
         "gold18",
@@ -38,18 +48,17 @@ def get_prices():
         "usdt"
     ]
 
+
     try:
 
-        response = requests.get(
-            URL,
+        r = requests.get(
+            TGJU_URL,
             headers=HEADERS,
-            timeout=20
+            timeout=15
         )
 
-        response.raise_for_status()
-
         soup = BeautifulSoup(
-            response.text,
+            r.text,
             "html.parser"
         )
 
@@ -61,89 +70,141 @@ def get_prices():
 
         patterns = {
 
-            # طلا و سکه
-            "gold18": [
-                r"طلا ۱۸\s+([\d,]+)",
-                r"طلای ۱۸ عیار\s+([\d,]+)"
-            ],
+            "gold18":
+            r"طلای ۱۸ عیار\s*([\d,]+)",
 
-            "mithqal": [
-                r"مثقال طلا\s+([\d,]+)"
-            ],
+            "mithqal":
+            r"مثقال طلا\s*([\d,]+)",
 
-            "emami": [
-                r"سکه\s+([\d,]+)"
-            ],
+            "emami":
+            r"سکه امامی\s*([\d,]+)",
 
+            "usd":
+            r"دلار\s*([\d,]+)",
 
-            # ارز
-            "usd": [
-                r"دلار\s+([\d,]+)"
-            ],
+            "eur":
+            r"یورو\s*([\d,]+)",
 
-            "eur": [
-                r"یورو\s+([\d,]+)"
-            ],
+            "gbp":
+            r"پوند انگلیس\s*([\d,]+)",
 
-            "gbp": [
-                r"پوند(?: انگلیس)?\s+([\d,]+)",
-                r"پوند\s*انگلیس\s+([\d,]+)"
-            ],
+            "aed":
+            r"درهم امارات\s*([\d,]+)",
 
-            "aed": [
-                r"درهم امارات\s+([\d,]+)",
-                r"درهم\s+([\d,]+)"
-            ],
+            "sar":
+            r"ریال عربستان\s*([\d,]+)",
 
-            "sar": [
-                r"ریال عربستان\s+([\d,]+)"
-            ],
+            "try":
+            r"لیر ترکیه\s*([\d,]+)",
 
-            "try": [
-                r"لیر ترکیه\s+([\d,]+)"
-            ],
+            "cny":
+            r"یوان چین\s*([\d,]+)",
 
-            "cny": [
-                r"یوان چین\s+([\d,]+)"
-            ],
-
-
-            # کریپتو
-            "usdt": [
-                r"تتر\s+([\d,]+)"
-            ]
+            "usdt":
+            r"تتر\s*([\d,]+)"
         }
 
 
         for key in keys:
 
-            prices[key] = None
+            match = re.search(
+                patterns[key],
+                text
+            )
 
-            for pattern in patterns[key]:
-
-                result = re.search(
-                    pattern,
-                    text
+            if match:
+                data[key] = clean_number(
+                    match.group(1)
                 )
 
-                if result:
-
-                    prices[key] = clean_number(
-                        result.group(1)
-                    )
-
-                    break
+            else:
+                data[key] = None
 
 
     except Exception as e:
 
         print(
-            "TGJU Error:",
+            "TGJU ERROR:",
             e
         )
 
         for key in keys:
-            prices[key] = None
+            data[key] = None
+
+
+    return data
+
+
+
+def get_crypto():
+
+    data = {}
+
+    coins = {
+        "btc": "bitcoin",
+        "eth": "ethereum",
+        "bnb": "binancecoin",
+        "sol": "solana",
+        "xrp": "ripple",
+        "ton": "the-open-network",
+        "doge": "dogecoin",
+        "usdt": "tether"
+    }
+
+
+    try:
+
+        r = requests.get(
+            COINGECKO_URL,
+            timeout=15
+        )
+
+        result = r.json()
+
+
+        for name, cid in coins.items():
+
+            coin = result.get(cid, {})
+
+            data[name] = coin.get(
+                "usd"
+            )
+
+            data[name + "_change"] = coin.get(
+                "usd_24h_change"
+            )
+
+
+    except Exception as e:
+
+        print(
+            "COINGECKO ERROR:",
+            e
+        )
+
+
+    return data
+
+
+
+def get_prices():
+
+    prices = {}
+
+    try:
+        prices.update(
+            get_tgju()
+        )
+    except:
+        pass
+
+
+    try:
+        prices.update(
+            get_crypto()
+        )
+    except:
+        pass
 
 
     return prices
@@ -152,6 +213,6 @@ def get_prices():
 
 if __name__ == "__main__":
 
-    data = get_prices()
-
-    print(data)
+    print(
+        get_prices()
+    )
