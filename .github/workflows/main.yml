@@ -20,12 +20,9 @@ jobs:
 
       - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run Telegram Bot
-        env:
-          TOKEN: ${{ secrets.TOKEN }}
-          NAVASAN_API_KEY: ${{ secrets.NAVASAN_API_KEY }}
-
+      - name: Test TGJU Connection
         run: |
-          python bot.py
+          python price_provider.py
