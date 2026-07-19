@@ -22,26 +22,23 @@ def test_page():
         "html.parser"
     )
 
-    # جستجوی کلمات مهم در صفحه
-    keywords = [
-        "dollar",
-        "price_dollar",
-        "سکه",
-        "دلار",
-        "طلا"
-    ]
+    # فقط لینک‌ها و المان‌هایی که احتمالاً قیمت دارند
+    items = soup.find_all(
+        ["tr", "div", "span"],
+        limit=200
+    )
 
-    for word in keywords:
-        print("\nSEARCH:", word)
+    for item in items:
+        text = item.get_text(" ", strip=True)
 
-        result = soup.find_all(
-            string=lambda text: text and word in text
-        )
-
-        print("FOUND:", len(result))
-
-        for item in result[:3]:
-            print(item.strip())
+        if any(word in text for word in [
+            "دلار",
+            "یورو",
+            "طلا",
+            "سکه"
+        ]):
+            print("------------------")
+            print(text[:300])
 
 
 if __name__ == "__main__":
