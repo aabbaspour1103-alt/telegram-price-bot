@@ -19,10 +19,16 @@ COINGECKO_URL = (
 )
 
 
-
 def clean_number(value):
 
     try:
+        value = value.translate(
+            str.maketrans(
+                "۰۱۲۳۴۵۶۷۸۹",
+                "0123456789"
+            )
+        )
+
         return int(
             re.sub(r"[^\d]", "", value)
         )
@@ -75,38 +81,47 @@ def get_tgju():
         patterns = {
 
             "gold18":
-            r"طلای ۱۸ عیار\s*([\d,]+)",
+            r"(?:طلای\s*۱۸\s*عیار|طلای\s*18\s*عیار|گرم طلای ۱۸|طلای هجده عیار)\s*[:\-]?\s*([\d,]+)",
+
 
             "mithqal":
-            r"مثقال طلا\s*([\d,]+)",
+            r"(?:مثقال طلا|مثقال)\s*[:\-]?\s*([\d,]+)",
+
 
             "emami":
-            r"سکه امامی\s*([\d,]+)",
+            r"(?:سکه امامی|امامی)\s*[:\-]?\s*([\d,]+)",
 
 
             "usd":
-            r"دلار\s*([\d,]+)",
+            r"(?:دلار آمریکا|دلار)\s*[:\-]?\s*([\d,]+)",
+
 
             "eur":
-            r"یورو\s*([\d,]+)",
+            r"یورو\s*[:\-]?\s*([\d,]+)",
+
 
             "gbp":
-            r"پوند انگلیس\s*([\d,]+)",
+            r"پوند انگلیس\s*[:\-]?\s*([\d,]+)",
+
 
             "aed":
-            r"درهم امارات\s*([\d,]+)",
+            r"درهم امارات\s*[:\-]?\s*([\d,]+)",
+
 
             "sar":
-            r"ریال عربستان\s*([\d,]+)",
+            r"ریال عربستان\s*[:\-]?\s*([\d,]+)",
+
 
             "try":
-            r"لیر ترکیه\s*([\d,]+)",
+            r"لیر ترکیه\s*[:\-]?\s*([\d,]+)",
+
 
             "cny":
-            r"یوان چین\s*([\d,]+)",
+            r"یوان چین\s*[:\-]?\s*([\d,]+)",
+
 
             "usdt":
-            r"تتر\s*([\d,]+)"
+            r"(?:تتر|Tether|USDT)\s*[:\-]?\s*([\d,]+)"
         }
 
 
@@ -115,7 +130,8 @@ def get_tgju():
 
             result = re.search(
                 patterns[key],
-                text
+                text,
+                re.IGNORECASE
             )
 
 
@@ -140,6 +156,7 @@ def get_tgju():
 
         for key in keys:
             data[key] = None
+
 
 
     return data
@@ -171,7 +188,6 @@ def get_crypto():
     }
 
 
-
     try:
 
         response = requests.get(
@@ -183,7 +199,6 @@ def get_crypto():
         result = response.json()
 
 
-
         for name, coin_id in coins.items():
 
             coin = result.get(
@@ -191,11 +206,9 @@ def get_crypto():
                 {}
             )
 
-
             data[name] = coin.get(
                 "usd"
             )
-
 
 
     except Exception as e:
@@ -204,7 +217,6 @@ def get_crypto():
             "COINGECKO ERROR:",
             e
         )
-
 
 
     return data
@@ -231,12 +243,26 @@ def get_prices():
         )
 
 
-
     try:
 
+        crypto = get_crypto()
+
         prices.update(
-            get_crypto()
+            crypto
         )
+
+
+        # اگر تتر تومان از TGJU پیدا نشد
+        # تبدیل تتر دلاری به تومان
+
+        if not prices.get("usdt"):
+
+            if crypto.get("usdt") and prices.get("usd"):
+
+                prices["usdt"] = int(
+                    crypto["usdt"] * prices["usd"]
+                )
+
 
     except Exception as e:
 
