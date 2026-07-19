@@ -13,9 +13,7 @@ TOKEN = os.getenv("TOKEN")
 CHANNEL_ID = "@CryptoBrew"
 
 
-
 def format_number(value, crypto=False):
-
     try:
         if value is None:
             return "نامشخص"
@@ -28,8 +26,10 @@ def format_number(value, crypto=False):
         if crypto:
             if num >= 1000:
                 return f"{num:,.2f}"
-
-            return f"{num:,.6f}".rstrip("0").rstrip(".")
+            elif num >= 1:
+                return f"{num:,.4f}".rstrip("0").rstrip(".")
+            else:
+                return f"{num:,.6f}".rstrip("0").rstrip(".")
 
         return f"{int(num):,}"
 
@@ -37,85 +37,134 @@ def format_number(value, crypto=False):
         return "نامشخص"
 
 
+def change_text(value):
+    try:
+        if value is None:
+            return ""
+
+        value = float(value)
+
+        if value > 0:
+            return f" 🔺+{value:.2f}%"
+
+        elif value < 0:
+            return f" 🔻{value:.2f}%"
+
+        return " ➖0.00%"
+
+    except:
+        return ""
+
 
 def iran_time():
 
     try:
-
-        tz = pytz.timezone(
-            "Asia/Tehran"
-        )
-
+        tz = pytz.timezone("Asia/Tehran")
         now = datetime.now(tz)
 
         j = jdatetime.datetime.fromgregorian(
             datetime=now
         )
 
-        return j.strftime(
-            "%Y/%m/%d - %H:%M"
-        )
+        return j.strftime("%Y/%m/%d - %H:%M")
 
     except:
         return "نامشخص"
 
 
 
-def get_crypto():
-
-    return {}
+def safe_price(data, key):
+    try:
+        return data.get(key)
+    except:
+        return None
 
 
 
 def create_message():
 
-    money = get_prices()
+    try:
+        money = get_prices()
+
+        if not isinstance(money, dict):
+            money = {}
+
+    except Exception as e:
+        print("Price Provider Error:", e)
+        money = {}
+
 
     return f"""
 💰 قیـمت لحظه‌ای بازار
 
 🥈 ارز :
 
-💵 دلار آمریکـــــــا: {format_number(money.get('usd'))} تومان
-💶 یــــورو اروپـــا: {format_number(money.get('eur'))} تومان
-💷 پـــوند انگلیس: {format_number(money.get('gbp'))} تومان
-🇨🇳 یــــوان چـــین: {format_number(money.get('cny'))} تومان
-🇦🇪 درهــم امارات: {format_number(money.get('aed'))} تومان
-🇸🇦 ریال عربستان: {format_number(money.get('sar'))} تومان
-🇹🇷 لـــــیــــر ترکیه: {format_number(money.get('try'))} تومان
+💵 دلار آمریکـــــــا: {format_number(safe_price(money,'usd'))} تومان{change_text(safe_price(money,'usd_change'))}
+
+💶 یــــورو اروپـــا: {format_number(safe_price(money,'eur'))} تومان{change_text(safe_price(money,'eur_change'))}
+
+💷 پـــوند انگلیس: {format_number(safe_price(money,'gbp'))} تومان{change_text(safe_price(money,'gbp_change'))}
+
+🇨🇳 یــــوان چـــین: {format_number(safe_price(money,'cny'))} تومان
+
+🇦🇪 درهــم امارات: {format_number(safe_price(money,'aed'))} تومان
+
+🇸🇦 ریال عربستان: {format_number(safe_price(money,'sar'))} تومان
+
+🇹🇷 لـــــیــــر ترکیه: {format_number(safe_price(money,'try'))} تومان
 
 
 🥇 طلا و سکه:
 
-🥇 طلای ۱۸ عیار: {format_number(money.get('gold18'))} تومان
-🟡 مثقال طلا: {format_number(money.get('mithqal'))} تومان
-🪙 سکه امامی: {format_number(money.get('emami'))} تومان
+🥇 طلای ۱۸ عیار: {format_number(safe_price(money,'gold18'))} تومان
+
+🟡 مثقال طلا: {format_number(safe_price(money,'mithqal'))} تومان
+
+🪙 سکه امامی: {format_number(safe_price(money,'emami'))} تومان
 
 
-💵 تتر:
-{format_number(money.get('usdt'))} تومان
+🥇 ارز دیجیتال:
+
+🔶 بیت‌کوین (BTC): {format_number(safe_price(money,'btc'),True)} دلار{change_text(safe_price(money,'btc_change'))}
+
+🔷 اتریوم (ETH): {format_number(safe_price(money,'eth'),True)} دلار{change_text(safe_price(money,'eth_change'))}
+
+🔸 بایننس‌کوین (BNB): {format_number(safe_price(money,'bnb'),True)} دلار{change_text(safe_price(money,'bnb_change'))}
+
+🔹 سولانا (SOL): {format_number(safe_price(money,'sol'),True)} دلار{change_text(safe_price(money,'sol_change'))}
+
+🔸 ریپل (XRP): {format_number(safe_price(money,'xrp'),True)} دلار{change_text(safe_price(money,'xrp_change'))}
+
+🔹 تون‌کوین (TON): {format_number(safe_price(money,'ton'),True)} دلار{change_text(safe_price(money,'ton_change'))}
+
+🔸 دوج‌کوین (DOGE): {format_number(safe_price(money,'doge'),True)} دلار{change_text(safe_price(money,'doge_change'))}
+
+💵 تتر (USDT): {format_number(safe_price(money,'usdt'),True)} دلار
 
 
-🕒 بــروزرسانــی:
+🕒 بروزرسانی:
 {iran_time()}
 
 - @CryptoBrew
 """
 
 
-
 async def main():
 
     try:
 
-        bot = Bot(
-            token=TOKEN
-        )
+        if not TOKEN:
+            print("TOKEN not found")
+            return
+
+        bot = Bot(token=TOKEN)
 
         await bot.send_message(
             chat_id=CHANNEL_ID,
             text=create_message()
         )
+
+        print("Message sent successfully")
 
     except Exception as e:
 
@@ -125,7 +174,5 @@ async def main():
         )
 
 
-
 if __name__ == "__main__":
-
     asyncio.run(main())
