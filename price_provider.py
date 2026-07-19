@@ -13,18 +13,20 @@ HEADERS = {
 COINGECKO_URL = (
     "https://api.coingecko.com/api/v3/simple/price"
     "?ids=bitcoin,ethereum,binancecoin,solana,ripple,"
-    "the-open-network,dogecoin,tether"
+    "the-open-network,dogecoin,cardano,avalanche-2,"
+    "polkadot,litecoin,shiba-inu,tether"
     "&vs_currencies=usd"
-    "&include_24hr_change=true"
 )
 
 
 
 def clean_number(value):
+
     try:
         return int(
             re.sub(r"[^\d]", "", value)
         )
+
     except:
         return None
 
@@ -51,16 +53,18 @@ def get_tgju():
 
     try:
 
-        r = requests.get(
+        response = requests.get(
             TGJU_URL,
             headers=HEADERS,
             timeout=15
         )
 
+
         soup = BeautifulSoup(
-            r.text,
+            response.text,
             "html.parser"
         )
+
 
         text = soup.get_text(
             " ",
@@ -78,6 +82,7 @@ def get_tgju():
 
             "emami":
             r"سکه امامی\s*([\d,]+)",
+
 
             "usd":
             r"دلار\s*([\d,]+)",
@@ -105,20 +110,25 @@ def get_tgju():
         }
 
 
+
         for key in keys:
 
-            match = re.search(
+            result = re.search(
                 patterns[key],
                 text
             )
 
-            if match:
+
+            if result:
+
                 data[key] = clean_number(
-                    match.group(1)
+                    result.group(1)
                 )
 
             else:
+
                 data[key] = None
+
 
 
     except Exception as e:
@@ -136,11 +146,14 @@ def get_tgju():
 
 
 
+
 def get_crypto():
 
     data = {}
 
+
     coins = {
+
         "btc": "bitcoin",
         "eth": "ethereum",
         "bnb": "binancecoin",
@@ -148,31 +161,41 @@ def get_crypto():
         "xrp": "ripple",
         "ton": "the-open-network",
         "doge": "dogecoin",
+        "ada": "cardano",
+        "avax": "avalanche-2",
+        "dot": "polkadot",
+        "ltc": "litecoin",
+        "shib": "shiba-inu",
         "usdt": "tether"
+
     }
+
 
 
     try:
 
-        r = requests.get(
+        response = requests.get(
             COINGECKO_URL,
             timeout=15
         )
 
-        result = r.json()
+
+        result = response.json()
 
 
-        for name, cid in coins.items():
 
-            coin = result.get(cid, {})
+        for name, coin_id in coins.items():
+
+            coin = result.get(
+                coin_id,
+                {}
+            )
+
 
             data[name] = coin.get(
                 "usd"
             )
 
-            data[name + "_change"] = coin.get(
-                "usd_24h_change"
-            )
 
 
     except Exception as e:
@@ -183,7 +206,9 @@ def get_crypto():
         )
 
 
+
     return data
+
 
 
 
@@ -191,23 +216,38 @@ def get_prices():
 
     prices = {}
 
+
     try:
+
         prices.update(
             get_tgju()
         )
-    except:
-        pass
+
+    except Exception as e:
+
+        print(
+            "TGJU FAIL:",
+            e
+        )
+
 
 
     try:
+
         prices.update(
             get_crypto()
         )
-    except:
-        pass
+
+    except Exception as e:
+
+        print(
+            "CRYPTO FAIL:",
+            e
+        )
 
 
     return prices
+
 
 
 
