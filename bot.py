@@ -23,7 +23,7 @@ def format_number(value, crypto=False):
         num = float(value)
 
         if not crypto:
-            num = num / 10   # ریال به تومان
+            num = num / 10
 
         if crypto:
 
@@ -97,33 +97,20 @@ def create_message():
 🟡 مثــــــقال طلا: {format_number(data.get('mithqal'))} تومان
 🟡 ســــکه امامی: {format_number(data.get('emami'))} تومان
 
-💵 تـــــــــــــــــتــر: {format_number(data.get('usdt'))} تومان
-
 
 🥇 ارز دیجیتال:
 
 🔶 بیــــت‌کوین (BTC): {format_number(data.get('btc'), True)} دلار
-
 🔷 اتــــریــــــوم (ETH): {format_number(data.get('eth'), True)} دلار
-
 🔸 بایننس‌کوین (BNB): {format_number(data.get('bnb'), True)} دلار
-
 🔹 ســــــــــولانا (SOL): {format_number(data.get('sol'), True)} دلار
-
 🔸 ریـــــــــــــپل (XRP): {format_number(data.get('xrp'), True)} دلار
-
 🔹 تـــــون‌کوین (TON): {format_number(data.get('ton'), True)} دلار
-
 🔸 دوج‌کـوین (DOGE): {format_number(data.get('doge'), True)} دلار
-
 🔹 کـــاردانــــــو (ADA): {format_number(data.get('ada'), True)} دلار
-
 🔸 آوالانـــــــچ (AVAX): {format_number(data.get('avax'), True)} دلار
-
 🔹 پولـــکـــادات (DOT): {format_number(data.get('dot'), True)} دلار
-
 🔸 لایــــــت‌کوین (LTC): {format_number(data.get('ltc'), True)} دلار
-
 🔹 شیـــــبا اینو (SHIB): {format_number(data.get('shib'), True)} دلار
 
 
