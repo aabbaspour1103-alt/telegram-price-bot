@@ -81,7 +81,6 @@ def create_message():
 💰 قیـمت لحظه‌ای بازار
 
 🥈 ارز :
-
 💵 دلار آمریکـــــــا: {format_number(data.get('usd'))} تومان
 💶 یــــورو اروپـــا: {format_number(data.get('eur'))} تومان
 💷 پـــوند انگلیس: {format_number(data.get('gbp'))} تومان
@@ -90,16 +89,13 @@ def create_message():
 🇸🇦 ریال عربستان: {format_number(data.get('sar'))} تومان
 🇹🇷 لـــــیــــر ترکیه: {format_number(data.get('try'))} تومان
 
-
 🥇 طلا و سکه:
 
 🟡 طلای ۱۸ عـیار: {format_number(data.get('gold18'))} تومان
 🟡 مثــــــقال طلا: {format_number(data.get('mithqal'))} تومان
 🟡 ســــکه امامی: {format_number(data.get('emami'))} تومان
 
-
 🥇 ارز دیجیتال:
-
 🔶 بیــــت‌کوین (BTC): {format_number(data.get('btc'), True)} دلار
 🔷 اتــــریــــــوم (ETH): {format_number(data.get('eth'), True)} دلار
 🔸 بایننس‌کوین (BNB): {format_number(data.get('bnb'), True)} دلار
@@ -114,8 +110,7 @@ def create_message():
 🔹 شیـــــبا اینو (SHIB): {format_number(data.get('shib'), True)} دلار
 
 
-🕒 بــروزرسانــی:
-{iran_time()}
+🕒 بــروزرسانــی:{iran_time()}
 
 - @CryptoBrew
 """
