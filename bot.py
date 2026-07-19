@@ -90,7 +90,6 @@ def create_message():
 🇹🇷 لـــــیــــر ترکیه: {format_number(data.get('try'))} تومان
 
 🥇 طلا و سکه:
-
 🟡 طلای ۱۸ عـیار: {format_number(data.get('gold18'))} تومان
 🟡 مثــــــقال طلا: {format_number(data.get('mithqal'))} تومان
 🟡 ســــکه امامی: {format_number(data.get('emami'))} تومان
@@ -110,7 +109,7 @@ def create_message():
 🔹 شیـــــبا اینو (SHIB): {format_number(data.get('shib'), True)} دلار
 
 
-🕒 بــروزرسانــی:{iran_time()}
+🕒 بــروزرسانــی: {iran_time()}
 
 - @CryptoBrew
 """
